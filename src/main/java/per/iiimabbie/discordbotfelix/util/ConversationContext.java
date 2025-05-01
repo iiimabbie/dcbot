@@ -1,26 +1,40 @@
 package per.iiimabbie.discordbotfelix.util;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConversationContext {
+public class ConversationContext implements Serializable {
+
+  @Serial
+  private static final long serialVersionUID = 1L;
+
+
   private final List<Message> messages = new ArrayList<>();
-  private static final int MAX_CONTEXT_SIZE = 10; // 保留最近的10條消息
+  private static final int MAX_CONTEXT_SIZE = 20;
 
-  // 內部消息類
-    public record Message(String role, String content) {
+  /**
+   * @param userId   新增
+   * @param userName 新增
+   */
+  // 內部消息類，加入用戶ID和用戶名
+  public record Message(String role, String content, String userId, String userName) implements Serializable {
 
+    @Serial
+    private static final long serialVersionUID = 1L;
   }
 
+
   // 添加用戶消息
-  public void addUserMessage(String content) {
-    messages.add(new Message("user", content));
+  public void addUserMessage(String content, String userId, String userName) {
+    messages.add(new Message("user", content, userId, userName));
     trimContextIfNeeded();
   }
 
   // 添加 AI 回覆
   public void addAiResponse(String content) {
-    messages.add(new Message("model", content));
+    messages.add(new Message("model", content, "bot", "Felix"));
     trimContextIfNeeded();
   }
 

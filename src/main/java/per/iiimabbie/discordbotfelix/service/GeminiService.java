@@ -19,12 +19,14 @@ import per.iiimabbie.discordbotfelix.util.ConfigLoader;
 import per.iiimabbie.discordbotfelix.util.ConversationContext;
 
 public class GeminiService {
+
   private static final Logger logger = LoggerFactory.getLogger(GeminiService.class);
 
   private final String apiKey;
   private final HttpClient httpClient;
   private final String systemPrompt;
   private final static String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+  private static final int MAX_RETRIES = 3;
 
   public GeminiService(String apiKey) {
     this.apiKey = apiKey;
@@ -55,40 +57,7 @@ public class GeminiService {
           .build();
 
       // 異步發送請求
-      return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
-          .thenApply(response -> {
-            logger.info("回應狀態碼: {}", response.statusCode());
-
-            if (response.statusCode() == 200) {
-              JSONObject jsonResponse = new JSONObject(response.body());
-
-              try {
-                // 嘗試解析回應
-                String result = jsonResponse
-                    .getJSONArray("candidates")
-                    .getJSONObject(0)
-                    .getJSONObject("content")
-                    .getJSONArray("parts")
-                    .getJSONObject(0)
-                    .getString("text");
-
-                // 檢查結果是否包含問號（可能的編碼問題）
-                if (result.contains("??????")) {
-                  logger.warn("檢測到可能的編碼問題，回應包含問號");
-                  return "抱歉，我遇到了編碼問題。請嘗試簡單的英文提問，或聯繫管理員檢查系統編碼設置。";
-                }
-
-                return result;
-              } catch (Exception e) {
-                logger.error("解析回應失敗: {}", e.getMessage(), e);
-                return "解析 AI 回應時發生錯誤，請查看日誌。";
-              }
-            } else {
-              // 處理錯誤
-              logger.error("API 呼叫失敗，狀態碼: {}，回應: {}", response.statusCode(), response.body());
-              throw new RuntimeException("API 呼叫失敗，狀態碼: " + response.statusCode() + "\n回應: " + response.body());
-            }
-          });
+      return sendWithRetry(request, 0);
 
     } catch (Exception e) {
       logger.error("建立請求時發生錯誤: {}", e.getMessage(), e);
@@ -97,6 +66,60 @@ public class GeminiService {
       return future;
     }
   }
+
+  private CompletableFuture<String> sendWithRetry(HttpRequest request, int attempt) {
+    return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8))
+        .thenCompose(response -> {
+          logger.info("回應狀態碼: {}", response.statusCode());
+
+          if (response.statusCode() == 200) {
+            JSONObject jsonResponse = new JSONObject(response.body());
+
+            try {
+              // 嘗試解析回應
+              String result = jsonResponse
+                  .getJSONArray("candidates")
+                  .getJSONObject(0)
+                  .getJSONObject("content")
+                  .getJSONArray("parts")
+                  .getJSONObject(0)
+                  .getString("text");
+
+              // 檢查結果是否包含問號（可能的編碼問題）
+              if (result.contains("??????")) {
+                logger.warn("檢測到可能的編碼問題，回應包含問號");
+                return CompletableFuture.completedFuture("抱歉，我遇到了編碼問題。請嘗試簡單的英文提問，或聯繫管理員檢查系統編碼設置。");
+              }
+
+              return CompletableFuture.completedFuture(result);
+            } catch (Exception e) {
+              logger.error("解析回應失敗: {}", e.getMessage(), e);
+              return CompletableFuture.completedFuture("解析 AI 回應時發生錯誤，請查看log。");
+            }
+          } else {
+            // 嘗試重試
+            if (attempt < MAX_RETRIES) {
+              logger.warn("API 呼叫失敗，狀態碼: {}，嘗試重試 ({}/{})",
+                  response.statusCode(), attempt + 1, MAX_RETRIES);
+              // 延遲一段時間後重試
+              try {
+                Thread.sleep(3000L * (attempt + 1)); // 指數退避
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              }
+              return sendWithRetry(request, attempt + 1);
+            } else {
+              // 處理錯誤
+              logger.error("API 呼叫失敗，狀態碼: {}，回應: {}", response.statusCode(), response.body());
+              CompletableFuture<String> future = new CompletableFuture<>();
+              future.completeExceptionally(new RuntimeException(
+                  "API 呼叫失敗，狀態碼: " + response.statusCode() + "\n回應: " + response.body()));
+              return future;
+            }
+          }
+        });
+  }
+
 
   private @NotNull JSONObject getJsonObject(ConversationContext context) {
     JSONObject requestBody = new JSONObject();
@@ -138,9 +161,14 @@ public class GeminiService {
 
       JSONArray parts = new JSONArray();
       JSONObject part = new JSONObject();
-      part.put("text", message.content());
-      parts.put(part);
+      // 如果是用戶訊息，加上用戶名
+      if (role.equals("user")) {
+        part.put("text", message.userName() + ": " + message.content());
+      } else {
+        part.put("text", message.content());
+      }
 
+      parts.put(part);
       content.put("parts", parts);
       contents.put(content);
     }
@@ -186,7 +214,7 @@ public class GeminiService {
       // 創建服務並測試
       GeminiService service = new GeminiService(apiKey);
       ConversationContext context = new ConversationContext();
-      context.addUserMessage("你好，請介紹一下自己");
+      context.addUserMessage("你好，請介紹一下自己", "test-user", "测试用户");
 
       service.generateResponseWithContext(context).thenAccept(response -> {
         logger.info("=== AI 回應 ===");
