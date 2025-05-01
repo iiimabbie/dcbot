@@ -8,7 +8,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,6 +19,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import per.iiimabbie.discordbotfelix.enums.Command;
 import per.iiimabbie.discordbotfelix.util.ConfigLoader;
 import per.iiimabbie.discordbotfelix.util.ConversationContext;
 
@@ -30,7 +30,7 @@ public class MessageListener extends ListenerAdapter {
   private final String prefix;
   private final Map<String, ConversationContext> channelContexts = new HashMap<>();
   private final String loadingEmoji = "⏳"; // 加載表情符號
-  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(5);
+  private final String errEmoji = "💀"; // 錯誤表情符號
   private final File contextFile = new File("channel_contexts.dat");
 
 
@@ -49,6 +49,7 @@ public class MessageListener extends ListenerAdapter {
     loadContexts();
 
     // 定期自動保存上下文 (每5分鐘)
+    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(5);
     scheduler.scheduleAtFixedRate(this::saveContexts, 5, 5, TimeUnit.MINUTES);
   }
 
@@ -66,67 +67,89 @@ public class MessageListener extends ListenerAdapter {
     User user = event.getAuthor();
     String userName = user.getName(); // 獲取用戶名
 
-    // 檢查是否是命令
-    if (content.startsWith(prefix + "ai ")) {
-      String query = content.substring((prefix + "ai ").length());
+    Command command = null;
+    String commandArgs = null;
 
-      // 添加 loading 表情符號
-      CompletableFuture<Void> reactionFuture = message.addReaction(Emoji.fromUnicode(loadingEmoji)).submit();
+    if (content.startsWith(prefix)) {
+      if (content.startsWith(prefix + "reset")) {
+        command = Command.RESET;
+      } else if (content.startsWith(prefix + "reload")) {
+        command = Command.RELOAD;
+      } else if (content.startsWith(prefix + "ai ")) {
+        command = Command.AI;
+      }
+    }
 
-      // 獲取頻道的對話上下文，如果沒有則創建新的
-      ConversationContext context = channelContexts.getOrDefault(channelId, new ConversationContext());
-
-      // 添加用戶的新消息到上下文，包含用戶名
-      context.addUserMessage(query, userId, userName);
-
-      // 呼叫 Gemini API 並傳遞上下文
-      geminiService.generateResponseWithContext(context).thenAccept(answer -> {
-        // 添加 AI 回覆到上下文
-        context.addAiResponse(answer);
-
-        // 更新頻道的對話上下文
-        channelContexts.put(channelId, context);
-
-        // 保存上下文
-        saveContexts();
-
-        // 檢查回應長度，Discord 有 2000 字元限制
-        if (answer.length() <= 2000) {
-          message.reply(answer).queue(response -> {
-            // 消息發送後，移除 loading 表情符號
-            reactionFuture.thenRun(() -> message.removeReaction(Emoji.fromUnicode(loadingEmoji)).queue());
-          });
-        } else {
-          // 分段發送
-          message.reply(answer.substring(0, 2000)).queue();
-
-          // 計算需要多少段
-          int parts = (int) Math.ceil(answer.length() / 2000.0);
-          for (int i = 1; i < parts; i++) {
-            int start = i * 2000;
-            int end = Math.min(start + 2000, answer.length());
-            String part = answer.substring(start, end);
-
-            if (i == parts - 1) {
-              // 最後一個部分，完成後移除表情符號
-              event.getChannel().sendMessage(part).queue(response ->  reactionFuture.thenRun(() -> message.removeReaction(Emoji.fromUnicode(loadingEmoji)).queue()));
+    if (command != null) {
+      switch (command) {
+        case AI:
+          String query = content.substring((prefix + "ai ").length());
+          // 添加 loading 表情符號
+          CompletableFuture<Void> reactionFuture = message.addReaction(Emoji.fromUnicode(loadingEmoji)).submit();
+          // 獲取頻道的對話上下文，如果沒有則創建新的
+          ConversationContext context = channelContexts.getOrDefault(channelId, new ConversationContext());
+          // 添加用戶的新消息到上下文，包含用戶名
+          context.addUserMessage(query, userId, userName);
+          // 呼叫 Gemini API 並傳遞上下文
+          geminiService.generateResponseWithContext(context).thenAccept(answer -> {
+            // 添加 AI 回覆到上下文
+            context.addAiResponse(answer);
+            // 更新頻道的對話上下文
+            channelContexts.put(channelId, context);
+            // 保存上下文
+            saveContexts();
+            // 檢查回應長度，Discord 有 2000 字元限制
+            if (answer.length() <= 2000) {
+              message.reply(answer).queue(response -> {
+                // 消息發送後，移除 loading 表情符號
+                reactionFuture.thenRun(() -> message.removeReaction(Emoji.fromUnicode(loadingEmoji)).queue());
+              });
             } else {
-              event.getChannel().sendMessage(part).queue();
+              // 分段發送
+              message.reply(answer.substring(0, 2000)).queue();
+              // 計算需要多少段
+              int parts = (int) Math.ceil(answer.length() / 2000.0);
+              for (int i = 1; i < parts; i++) {
+                int start = i * 2000;
+                int end = Math.min(start + 2000, answer.length());
+                String part = answer.substring(start, end);
+                if (i == parts - 1) {
+                  // 最後一個部分，完成後移除表情符號
+                  event.getChannel().sendMessage(part).queue(response -> reactionFuture.thenRun(() -> message.removeReaction(Emoji.fromUnicode(loadingEmoji)).queue()));
+                } else {
+                  event.getChannel().sendMessage(part).queue();
+                }
+              }
             }
-          }
-        }
-      }).exceptionally(ex -> {
-        // 發生錯誤，回覆錯誤訊息並移除表情符號
-        message.reply("處理請求時發生錯誤: " + ex.getMessage()).queue();
-        reactionFuture.thenRun(() -> message.removeReaction(Emoji.fromUnicode(loadingEmoji)).queue());
-        return null;
-      });
-    } else if (content.equals(prefix + "reset")) {
-      // 重置頻道的對話上下文
-      channelContexts.remove(userId);
-      message.reply("已重置你的對話上下文！").queue();
+          }).exceptionally(ex -> {
+            // 發生錯誤，回覆錯誤訊息並移除表情符號
+            reactionFuture.thenRun(() -> message.removeReaction(Emoji.fromUnicode(loadingEmoji)).queue());
+            reactionFuture.thenRun(() -> message.addReaction(Emoji.fromUnicode(errEmoji)).queue());
+            return null;
+          });
+          break;
+        case RESET:
+          // 重置頻道的對話上下文
+          channelContexts.remove(channelId);
+          message.reply("已重置你的對話上下文！").queue();
+          logger.info("已重置你的對話上下文！");
+          break;
+          // TODO: RELOAD
+//        case RELOAD:
+//          try {
+//            ConfigLoader.reload();
+//
+//            message.reply("配置檔已重新載入。").queue();
+//            logger.info("配置檔已重新載入。");
+//          } catch (Exception e) {
+//            message.reply("重新載入失敗: " + e.getMessage()).queue();
+//            logger.error("重新載入失敗: {}", e.getMessage());
+//          }
+//          break;
+      }
     }
   }
+
 
   // 保存對話上下文到檔案
   private synchronized void saveContexts() {

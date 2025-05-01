@@ -29,5 +29,15 @@ public class ConfigLoader {
   public static String getOrDefault(String key, String defaultValue) {
     return properties.getProperty(key, defaultValue);
   }
+
+  public static void reload() {
+    try (Reader reader = new InputStreamReader(new FileInputStream("config.properties"), StandardCharsets.UTF_8)) {
+      properties.clear();
+      properties.load(reader);
+    } catch (IOException e) {
+      throw new RuntimeException("重新讀取配置檔失敗: " + e.getMessage(), e);
+    }
+  }
+
 }
 
