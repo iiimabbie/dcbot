@@ -93,9 +93,7 @@ public class MessageListener extends ListenerAdapter {
 
             if (i == parts - 1) {
               // 最後一個部分，完成後移除表情符號
-              event.getChannel().sendMessage(part).queue(response -> {
-                reactionFuture.thenRun(() -> message.removeReaction(Emoji.fromUnicode(loadingEmoji)).queue());
-              });
+              event.getChannel().sendMessage(part).queue(response ->  reactionFuture.thenRun(() -> message.removeReaction(Emoji.fromUnicode(loadingEmoji)).queue()));
             } else {
               event.getChannel().sendMessage(part).queue();
             }

@@ -8,22 +8,8 @@ public class ConversationContext {
   private static final int MAX_CONTEXT_SIZE = 10; // 保留最近的10條消息
 
   // 內部消息類
-  public static class Message {
-    private final String role;
-    private final String content;
+    public record Message(String role, String content) {
 
-    public Message(String role, String content) {
-      this.role = role;
-      this.content = content;
-    }
-
-    public String getRole() {
-      return role;
-    }
-
-    public String getContent() {
-      return content;
-    }
   }
 
   // 添加用戶消息
@@ -46,7 +32,7 @@ public class ConversationContext {
   // 如果上下文太長，刪除最舊的消息
   private void trimContextIfNeeded() {
     while (messages.size() > MAX_CONTEXT_SIZE) {
-      messages.remove(0);
+      messages.removeFirst();
     }
   }
 }
