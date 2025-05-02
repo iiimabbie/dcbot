@@ -1,24 +1,24 @@
 package per.iiimabbie.discordbotfelix.service;
 
-import java.io.FileInputStream;
-import java.io.IOException;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import per.iiimabbie.discordbotfelix.model.ChatMessage;
+import per.iiimabbie.discordbotfelix.util.ConfigLoader;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import per.iiimabbie.discordbotfelix.util.ConfigLoader;
-import per.iiimabbie.discordbotfelix.util.ConversationContext;
 
-public class GeminiService {
+/**
+ * 使用 Google Gemini API 的 AI 服務實現
+ */
+public class GeminiService implements AiService {
 
   private static final Logger logger = LoggerFactory.getLogger(GeminiService.class);
 
@@ -35,11 +35,11 @@ public class GeminiService {
     this.systemPrompt = ConfigLoader.get("bot.system.prompt");
   }
 
-  // 帶上下文的 Gemini API 調用
-  public CompletableFuture<String> generateResponseWithContext(ConversationContext context) {
+  @Override
+  public CompletableFuture<String> generateResponse(List<ChatMessage> chatHistory) {
     try {
       // 構建 Gemini API 請求
-      JSONObject requestBody = getJsonObject(context);
+      JSONObject requestBody = buildRequestBody(chatHistory);
 
       // 輸出請求內容用於調試
       logger.debug("請求 URL: {}", API_URL + "?key=" + apiKey);
@@ -88,7 +88,8 @@ public class GeminiService {
               // 檢查結果是否包含問號（可能的編碼問題）
               if (result.contains("??????")) {
                 logger.warn("檢測到可能的編碼問題，回應包含問號");
-                return CompletableFuture.completedFuture("抱歉，我遇到了編碼問題。請嘗試簡單的英文提問，或聯繫管理員檢查系統編碼設置。");
+                return CompletableFuture.completedFuture(
+                    "抱歉，我遇到了編碼問題。請嘗試簡單的英文提問，或聯繫管理員檢查系統編碼設置。");
               }
 
               return CompletableFuture.completedFuture(result);
@@ -120,8 +121,7 @@ public class GeminiService {
         });
   }
 
-
-  private @NotNull JSONObject getJsonObject(ConversationContext context) {
+  private JSONObject buildRequestBody(List<ChatMessage> chatHistory) {
     JSONObject requestBody = new JSONObject();
 
     // 每次對話都添加系統提示作為第一條消息，確保人設不丟失
@@ -152,11 +152,10 @@ public class GeminiService {
     contents.put(aiConfirmation);
 
     // 然後添加實際的對話歷史
-    List<ConversationContext.Message> messages = context.getMessages();
-    for (ConversationContext.Message message : messages) {
+    for (ChatMessage message : chatHistory) {
       JSONObject content = new JSONObject();
 
-      String role = message.role().equals("model") ? "model" : "user";
+      String role = message.role();
       content.put("role", role);
 
       JSONArray parts = new JSONArray();
@@ -193,37 +192,5 @@ public class GeminiService {
 
     requestBody.put("safetySettings", safetySettingsArray);
     return requestBody;
-  }
-
-  // 測試方法，可以直接運行來測試 Gemini API 是否正常工作
-  public static void main(String[] args) {
-    // 設置 JVM 的字符集
-    System.setProperty("file.encoding", "UTF-8");
-
-    // 從配置檔讀取 API Key
-    Properties properties = new Properties();
-    try {
-      properties.load(new FileInputStream("config.properties"));
-      String apiKey = properties.getProperty("gemini.api.key");
-
-      if (apiKey == null || apiKey.isEmpty()) {
-        logger.error("Gemini API Key 未設定");
-        return;
-      }
-
-      // 創建服務並測試
-      GeminiService service = new GeminiService(apiKey);
-      ConversationContext context = new ConversationContext();
-      context.addUserMessage("你好，請介紹一下自己", "test-user", "测试用户");
-
-      service.generateResponseWithContext(context).thenAccept(response -> {
-        logger.info("=== AI 回應 ===");
-        logger.info(response);
-        logger.info("==============");
-      }).join();
-
-    } catch (IOException e) {
-      logger.error("無法讀取配置檔: {}", e.getMessage(), e);
-    }
   }
 }

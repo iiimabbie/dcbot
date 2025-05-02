@@ -1,44 +1,30 @@
 package per.iiimabbie.discordbotfelix;
 
-import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.utils.ChunkingFilter;
-import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import per.iiimabbie.discordbotfelix.service.MessageListener;
-import per.iiimabbie.discordbotfelix.util.ConfigLoader;
+import per.iiimabbie.discordbotfelix.core.BotCore;
 
+/**
+ * 機器人主類，程序入口點
+ */
 public class BotMain {
+
   private static final Logger logger = LoggerFactory.getLogger(BotMain.class);
 
   public static void main(String[] args) {
-
-    // 獲取 Discord Bot Token
-    String token = ConfigLoader.get("discord.token");
-    if (token == null || token.isEmpty()) {
-      logger.info("Discord token 未設定");
-      return;
-    }
-
-    // 建立 JDA 實例
     try {
-      JDABuilder.createDefault(token)
-          .setActivity(Activity.customStatus("太好了是藥劑師我們有救了😭"))
-          .enableIntents(
-              GatewayIntent.GUILD_MESSAGES,
-              GatewayIntent.GUILD_MEMBERS,
-              GatewayIntent.MESSAGE_CONTENT
-          )
-          .setMemberCachePolicy(MemberCachePolicy.ALL)
-          .setChunkingFilter(ChunkingFilter.ALL)
-          .addEventListeners(new MessageListener())
-          .build();
+      // 初始化並啟動機器人
+      BotCore botCore = new BotCore();
+      logger.info("Bot，啟動！");
 
-      logger.info("Bot 已啟動！");
+      // 添加關閉鉤子
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        logger.info("正在關閉Bot...");
+        botCore.shutdown();
+      }));
+
     } catch (Exception e) {
-      logger.error("Bot 啟動失敗: {}", e.getMessage());
+      logger.error("Bot 啟動失敗: {}", e.getMessage(), e);
     }
   }
 }
