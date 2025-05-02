@@ -39,10 +39,10 @@ public class Conversation {
    * 添加消息到對話
    */
   public void addMessage(ChatMessage message) {
-    messages.add(0, message); // 新消息加到前面
+    messages.addFirst(message); // 新消息加到前面
     // 保持對話大小不超過限制
     if (messages.size() > maxSize) {
-      messages.remove(messages.size() - 1);
+      messages.removeLast();
     }
   }
 

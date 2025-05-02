@@ -21,9 +21,8 @@ public class BotCore {
   /**
    * 初始化機器人核心
    *
-   * @throws Exception 如果啟動失敗
    */
-  public BotCore() throws Exception {
+  public BotCore() {
     String token = ConfigLoader.get("discord.token");
     if (token == null || token.isEmpty()) {
       throw new IllegalStateException("Bot的token未設定");
