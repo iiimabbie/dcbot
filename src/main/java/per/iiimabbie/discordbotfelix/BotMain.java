@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import per.iiimabbie.discordbotfelix.core.BotCore;
 
 /**
- * 機器人主類，程序入口點
+ * 機器人主類，入口點
  */
 public class BotMain {
 
@@ -17,7 +17,6 @@ public class BotMain {
       BotCore botCore = new BotCore();
       logger.info("Bot，啟動！");
 
-      // 添加關閉鉤子
       Runtime.getRuntime().addShutdownHook(new Thread(() -> {
         logger.info("正在關閉Bot...");
         botCore.shutdown();

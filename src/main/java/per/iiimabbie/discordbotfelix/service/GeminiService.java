@@ -174,7 +174,7 @@ public class GeminiService implements AiService {
 
     requestBody.put("contents", contents);
 
-    // 可選的生成參數
+    // AI參數
     JSONObject generationConfig = new JSONObject();
     generationConfig.put("temperature", 0.7);
     generationConfig.put("maxOutputTokens", 800);
