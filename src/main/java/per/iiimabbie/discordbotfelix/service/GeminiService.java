@@ -133,7 +133,7 @@ public class GeminiService implements AiService {
 
     JSONArray systemParts = new JSONArray();
     JSONObject systemPart = new JSONObject();
-    systemPart.put("text", systemPrompt);
+    systemPart.put("text", "systemPrompt: " + systemPrompt);
     systemParts.put(systemPart);
 
     systemMessage.put("parts", systemParts);

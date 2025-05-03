@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -19,11 +20,13 @@ import org.slf4j.LoggerFactory;
 public class CommandManager extends ListenerAdapter {
 
   private static final Logger logger = LoggerFactory.getLogger(CommandManager.class);
-  private final Map<String, SlashCommand> commands = new HashMap<>();
+  private final Map<String, SlashCommand> commands = new HashMap<>(); // 全局命令
+  private final Map<String, Map<String, SlashCommand>> guildCommands = new HashMap<>(); // Guild命令
   private final List<ButtonHandler> buttonHandlers = new ArrayList<>();
 
   /**
    * 註冊全局命令
+   *
    * @param command 要註冊的命令
    */
   public void registerCommand(SlashCommand command) {
@@ -38,6 +41,7 @@ public class CommandManager extends ListenerAdapter {
 
   /**
    * 註冊按鈕處理器
+   *
    * @param handler 按鈕處理器
    */
   public void registerButtonHandler(ButtonHandler handler) {
@@ -47,6 +51,7 @@ public class CommandManager extends ListenerAdapter {
 
   /**
    * 註冊所有命令到JDA
+   *
    * @param jda JDA實例
    */
   public void registerCommandsToJDA(JDA jda) {
@@ -56,7 +61,7 @@ public class CommandManager extends ListenerAdapter {
     }
 
     jda.updateCommands().addCommands(commandDataList).queue(
-        success -> logger.info("已成功註冊所有斜線命令"),
+        success -> logger.info("已成功註冊全局 {} 個命令", commandDataList.size()),
         error -> logger.error("註冊斜線命令失敗", error)
     );
   }
@@ -96,5 +101,39 @@ public class CommandManager extends ListenerAdapter {
 
     // 如果沒有處理器處理此事件
     logger.warn("未找到處理按鈕 '{}' 的處理器", event.getComponentId());
+  }
+
+  // 註冊Guild專用命令
+  public void registerGuildCommand(SlashCommand command, String guildId) {
+    // 確保這個公會的Map已創建
+    guildCommands.computeIfAbsent(guildId, k -> new HashMap<>());
+
+    // 加入命令
+    guildCommands.get(guildId).put(command.getName(), command);
+
+    // 如果命令也實現了按鈕處理接口，註冊為按鈕處理器
+    if (command instanceof ButtonHandler) {
+      registerButtonHandler((ButtonHandler) command);
+    }
+
+    logger.debug("已為伺服器 {} 註冊命令: {}", guildId, command.getName());
+  }
+
+  // 註冊Guild命令到JDA
+  public void registerGuildCommandsToJDA(JDA jda, String guildId) {
+    if (!guildCommands.containsKey(guildId)) {
+      logger.info("伺服器 {} 沒有註冊任何命令", guildId);
+      return;
+    }
+
+    List<CommandData> commandDataList = new ArrayList<>();
+    for (SlashCommand command : guildCommands.get(guildId).values()) {
+      commandDataList.add(command.getCommandData());
+    }
+
+    Objects.requireNonNull(jda.getGuildById(guildId)).updateCommands().addCommands(commandDataList).queue(
+        success -> logger.info("已成功在伺服器 {} 註冊 {} 個命令", guildId, commandDataList.size()),
+        error -> logger.error("在伺服器 {} 註冊命令失敗", guildId, error)
+    );
   }
 }

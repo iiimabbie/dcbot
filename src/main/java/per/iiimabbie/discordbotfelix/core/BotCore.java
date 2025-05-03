@@ -25,6 +25,7 @@ public class BotCore implements EventListener {
   private static final Logger logger = LoggerFactory.getLogger(BotCore.class);
   private final JDA jda;
   private final CommandManager commandManager;
+  private final String guildId = ConfigLoader.get("guild.id");
 
   /**
    * 初始化機器人核心
@@ -39,7 +40,11 @@ public class BotCore implements EventListener {
 
     // 初始化命令管理器
     this.commandManager = new CommandManager();
+    // 全局註冊
     commandManager.registerCommand(new ClearCommand());
+    // 註冊更多命令...
+    // GUILD註冊
+    commandManager.registerGuildCommand(new ClearCommand(), guildId);
     // 註冊更多命令...
 
     this.jda = JDABuilder.createDefault(token)
@@ -72,7 +77,9 @@ public class BotCore implements EventListener {
     logger.info("JDA 已準備就緒！");
     try {
       // 在 JDA 準備就緒後註冊斜線命令
-      commandManager.registerCommandsToJDA(jda);
+      // commandManager.registerCommandsToJDA(jda);
+
+      commandManager.registerGuildCommandsToJDA(jda, guildId);
     } catch (Exception e) {
       logger.error("註冊斜線命令失敗", e);
     }
