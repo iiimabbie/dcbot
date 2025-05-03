@@ -23,7 +23,7 @@
   </appender>
 
   <!-- 日誌級別設定 -->
-  <root level="DEBUG">
+  <root level="INFO">
     <appender-ref ref="CONSOLE" />
     <appender-ref ref="FILE" />
   </root>

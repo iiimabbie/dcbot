@@ -83,27 +83,31 @@ public class ClearCommand implements SlashCommand, ButtonHandler {
       // 檢查是否有待處理的清除請求
       if (pendingClearRequests.containsKey(userId)) {
         int amount = pendingClearRequests.get(userId);
-        pendingClearRequests.remove(userId); // 移除請求
 
         // 執行清除操作前刪除原始訊息
         event.getMessage().delete().queue();
 
         // 執行清除操作
         executeClearMessages(event, amount);
+        pendingClearRequests.remove(userId); // 移除請求
       } else {
         event.reply("找不到您的清除請求。請重新使用 /清空 命令。").setEphemeral(true).queue();
       }
     } else {
       // 取消清除請求
       pendingClearRequests.remove(userId);
-      event.getMessage().delete().queue(
-          success -> event.reply("已取消清除訊息操作。").setEphemeral(true).queue(),
-          error -> {
-            logger.error("刪除原始訊息時發生錯誤", error);
-            event.reply("已取消清除訊息操作。").setEphemeral(true).queue();
+      // 先回應交互
+      event.reply("已取消清除訊息操作。").setEphemeral(true).queue(
+          success -> {
+            // 然後再刪除消息
+            event.getMessage().delete().queue(
+                null,
+                error -> logger.error("刪除原始訊息時發生錯誤", error)
+            );
           }
       );
     }
+
     return true;
   }
 
@@ -132,7 +136,7 @@ public class ClearCommand implements SlashCommand, ButtonHandler {
   }
 
   @Override
-  public String getDescription(){
+  public String getDescription() {
     return COMMAND_DESC;
   }
 }

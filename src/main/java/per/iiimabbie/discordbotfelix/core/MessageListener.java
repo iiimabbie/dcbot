@@ -77,6 +77,7 @@ public class MessageListener extends ListenerAdapter {
     aiService.generateResponse(
         MessageUtils.getChannelHistory(event, content, 20)
     ).thenAccept(answer -> {
+      logger.info("AI回復: {}", answer);
       // 回覆可能超長的消息
       MessageUtils.replyMessage(message, answer, reactionFuture);
     }).exceptionally(ex -> {
