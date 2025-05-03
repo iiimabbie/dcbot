@@ -23,7 +23,7 @@ public class CommandManager extends ListenerAdapter {
   private final List<ButtonHandler> buttonHandlers = new ArrayList<>();
 
   /**
-   * 註冊命令
+   * 註冊全局命令
    * @param command 要註冊的命令
    */
   public void registerCommand(SlashCommand command) {

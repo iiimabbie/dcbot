@@ -88,15 +88,6 @@ public class BotCore implements EventListener {
   }
 
   /**
-   * 獲取命令管理器
-   *
-   * @return 命令管理器
-   */
-  public CommandManager getCommandManager() {
-    return commandManager;
-  }
-
-  /**
    * 關閉機器人
    */
   public void shutdown() {

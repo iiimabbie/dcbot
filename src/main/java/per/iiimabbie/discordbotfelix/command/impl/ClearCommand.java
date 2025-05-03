@@ -24,6 +24,7 @@ public class ClearCommand implements SlashCommand, ButtonHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(ClearCommand.class);
   private static final String COMMAND_NAME = "清空";
+  private static final String COMMAND_DESC = "清空指定數量的聊天訊息";
   private static final String BUTTON_CONFIRM = "confirm_clear";
   private static final String BUTTON_CANCEL = "cancel_clear";
 
@@ -31,7 +32,7 @@ public class ClearCommand implements SlashCommand, ButtonHandler {
 
   @Override
   public CommandData getCommandData() {
-    return Commands.slash(COMMAND_NAME, "清空指定數量的聊天訊息")
+    return Commands.slash(COMMAND_NAME, COMMAND_DESC)
         .addOption(OptionType.INTEGER, "數量", "要清空的訊息數量", true)
         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.MESSAGE_MANAGE));
   }
@@ -128,5 +129,10 @@ public class ClearCommand implements SlashCommand, ButtonHandler {
       event.getHook().sendMessage("清除訊息時發生錯誤！").queue();
       logger.error("清除訊息失敗", error);
     });
+  }
+
+  @Override
+  public String getDescription(){
+    return COMMAND_DESC;
   }
 }

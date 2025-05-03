@@ -26,4 +26,13 @@ public interface SlashCommand {
   default String getName() {
     return getCommandData().getName();
   }
+
+  /**
+   * 獲取命令描述
+   * @return 命令描述
+   */
+  default String getDescription() {
+    return "未提供描述";  // default
+  }
+
 }
