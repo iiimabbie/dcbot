@@ -1,4 +1,4 @@
-package per.iiimabbie.discordbotfelix.util;
+package per.iiimabbie.discordbot.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,7 +10,7 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import per.iiimabbie.discordbotfelix.model.ChatMessage;
+import per.iiimabbie.discordbot.model.ChatMessage;
 
 /**
  * 消息處理工具類

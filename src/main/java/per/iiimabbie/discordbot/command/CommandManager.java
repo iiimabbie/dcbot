@@ -1,4 +1,4 @@
-package per.iiimabbie.discordbotfelix.command;
+package per.iiimabbie.discordbot.command;
 
 import java.util.ArrayList;
 import java.util.HashMap;

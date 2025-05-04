@@ -1,4 +1,4 @@
-package per.iiimabbie.discordbotfelix.command.impl;
+package per.iiimabbie.discordbot.command.impl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,8 +14,8 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import per.iiimabbie.discordbotfelix.command.ButtonHandler;
-import per.iiimabbie.discordbotfelix.command.SlashCommand;
+import per.iiimabbie.discordbot.command.ButtonHandler;
+import per.iiimabbie.discordbot.command.SlashCommand;
 
 /**
  * 清除訊息命令

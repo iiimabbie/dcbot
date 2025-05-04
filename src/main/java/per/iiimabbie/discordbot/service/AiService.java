@@ -1,6 +1,6 @@
-package per.iiimabbie.discordbotfelix.service;
+package per.iiimabbie.discordbot.service;
 
-import per.iiimabbie.discordbotfelix.model.ChatMessage;
+import per.iiimabbie.discordbot.model.ChatMessage;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 

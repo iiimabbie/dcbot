@@ -1,11 +1,11 @@
-package per.iiimabbie.discordbotfelix.service;
+package per.iiimabbie.discordbot.service;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import per.iiimabbie.discordbotfelix.model.ChatMessage;
-import per.iiimabbie.discordbotfelix.util.ConfigLoader;
+import per.iiimabbie.discordbot.model.ChatMessage;
+import per.iiimabbie.discordbot.util.ConfigLoader;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,6 +27,7 @@ public class GeminiService implements AiService {
   private final String systemPrompt;
   private final static String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
   private static final int MAX_RETRIES = 3;
+  private final String botName = ConfigLoader.get("bot.name");
 
   public GeminiService(String apiKey) {
     this.apiKey = apiKey;
@@ -145,7 +146,7 @@ public class GeminiService implements AiService {
 
     JSONArray aiParts = new JSONArray();
     JSONObject aiPart = new JSONObject();
-    aiPart.put("text", "好的，我是Felix，我會按照指示與用戶互動。");
+    aiPart.put("text", "好的，我是" + botName + "，我會按照指示與用戶互動。");
     aiParts.put(aiPart);
 
     aiConfirmation.put("parts", aiParts);

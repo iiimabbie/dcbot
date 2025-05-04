@@ -1,4 +1,4 @@
-package per.iiimabbie.discordbotfelix.util;
+package per.iiimabbie.discordbot.util;
 
 import java.io.FileInputStream;
 import java.io.IOException;

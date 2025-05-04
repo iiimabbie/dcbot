@@ -1,8 +1,8 @@
-package per.iiimabbie.discordbotfelix;
+package per.iiimabbie.discordbot;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import per.iiimabbie.discordbotfelix.core.BotCore;
+import per.iiimabbie.discordbot.core.BotCore;
 
 /**
  * 機器人主類，入口點

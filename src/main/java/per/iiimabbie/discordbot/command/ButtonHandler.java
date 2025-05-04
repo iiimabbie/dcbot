@@ -1,5 +1,5 @@
 
-package per.iiimabbie.discordbotfelix.command;
+package per.iiimabbie.discordbot.command;
 
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 

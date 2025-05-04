@@ -1,5 +1,5 @@
 
-package per.iiimabbie.discordbotfelix.core;
+package per.iiimabbie.discordbot.core;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -13,9 +13,9 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import per.iiimabbie.discordbotfelix.command.CommandManager;
-import per.iiimabbie.discordbotfelix.command.impl.ClearCommand;
-import per.iiimabbie.discordbotfelix.util.ConfigLoader;
+import per.iiimabbie.discordbot.command.CommandManager;
+import per.iiimabbie.discordbot.command.impl.ClearCommand;
+import per.iiimabbie.discordbot.util.ConfigLoader;
 
 /**
  * 機器人核心類，負責初始化和管理JDA實例

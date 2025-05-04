@@ -1,4 +1,4 @@
-package per.iiimabbie.discordbotfelix.core;
+package per.iiimabbie.discordbot.core;
 
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -6,10 +6,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import per.iiimabbie.discordbotfelix.service.AiService;
-import per.iiimabbie.discordbotfelix.service.GeminiService;
-import per.iiimabbie.discordbotfelix.util.ConfigLoader;
-import per.iiimabbie.discordbotfelix.util.MessageUtils;
+import per.iiimabbie.discordbot.service.AiService;
+import per.iiimabbie.discordbot.service.GeminiService;
+import per.iiimabbie.discordbot.util.ConfigLoader;
+import per.iiimabbie.discordbot.util.MessageUtils;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -64,7 +64,7 @@ public class MessageListener extends ListenerAdapter {
 
     // 如果僅僅是@了機器人但沒有內容，可以給出提示
     if (content.isEmpty()) {
-      message.reply("Felix。EMO版本。請問有什麼我可以幫助您的？").queue();
+      message.reply("?").queue();
       return;
     }
 

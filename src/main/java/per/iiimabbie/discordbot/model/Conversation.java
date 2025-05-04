@@ -1,4 +1,4 @@
-package per.iiimabbie.discordbotfelix.model;
+package per.iiimabbie.discordbot.model;
 
 import java.util.ArrayList;
 import java.util.List;
