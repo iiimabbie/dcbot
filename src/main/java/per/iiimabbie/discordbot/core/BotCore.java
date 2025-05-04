@@ -15,10 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import per.iiimabbie.discordbot.command.CommandManager;
 import per.iiimabbie.discordbot.command.impl.ClearCommand;
+import per.iiimabbie.discordbot.command.impl.HelpCommand;
 import per.iiimabbie.discordbot.util.ConfigLoader;
 
 /**
- * 機器人核心類，負責初始化和管理JDA實例
+ * 機器人核心類，負責初始化和管理 Discord 機器人的所有核心組件。
+ * 包括 JDA 實例、命令管理、事件監聽等。
+ *
+ * @author iiimabbie
  */
 public class BotCore implements EventListener {
 
@@ -42,9 +46,11 @@ public class BotCore implements EventListener {
     this.commandManager = new CommandManager();
     // 全局註冊
     commandManager.registerCommand(new ClearCommand());
+    commandManager.registerCommand(new HelpCommand(commandManager));
     // 註冊更多命令...
     // GUILD註冊
     commandManager.registerGuildCommand(new ClearCommand(), guildId);
+    commandManager.registerGuildCommand(new HelpCommand(commandManager), guildId);
     // 註冊更多命令...
 
     this.jda = JDABuilder.createDefault(token)
@@ -77,9 +83,8 @@ public class BotCore implements EventListener {
     logger.info("JDA 已準備就緒！");
     try {
       // 在 JDA 準備就緒後註冊斜線命令
-      // commandManager.registerCommandsToJDA(jda);
-
-      commandManager.registerGuildCommandsToJDA(jda, guildId);
+      commandManager.registerCommandsToJDA(jda); // 全局
+      commandManager.registerGuildCommandsToJDA(jda, guildId); // Guild
     } catch (Exception e) {
       logger.error("註冊斜線命令失敗", e);
     }

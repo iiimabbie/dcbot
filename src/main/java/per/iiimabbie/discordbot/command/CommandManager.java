@@ -25,9 +25,11 @@ public class CommandManager extends ListenerAdapter {
   private final List<ButtonHandler> buttonHandlers = new ArrayList<>();
 
   /**
-   * 註冊全局命令
+   * 註冊全局命令。
+   * 全局命令可以在任何 Discord 伺服器中使用。
    *
-   * @param command 要註冊的命令
+   * @param command 要註冊的斜線命令實例
+   * @throws IllegalArgumentException 如果命令名稱已存在
    */
   public void registerCommand(SlashCommand command) {
     commands.put(command.getName(), command);
@@ -135,5 +137,13 @@ public class CommandManager extends ListenerAdapter {
         success -> logger.info("已成功在伺服器 {} 註冊 {} 個命令", guildId, commandDataList.size()),
         error -> logger.error("在伺服器 {} 註冊命令失敗", guildId, error)
     );
+  }
+
+  /**
+   * 獲取所有已註冊的命令
+   * @return 命令列表
+   */
+  public List<SlashCommand> getCommands() {
+    return new ArrayList<>(commands.values());
   }
 }

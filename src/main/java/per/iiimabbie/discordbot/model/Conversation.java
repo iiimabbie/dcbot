@@ -32,11 +32,16 @@ public class Conversation {
    * 添加機器人消息到對話
    */
   public void addBotMessage(String content) {
-    addMessage(new ChatMessage("model", content, "bot", "Felix"));
+    addMessage(new ChatMessage("model", content, "bot", null));
   }
 
   /**
-   * 添加消息到對話
+   * 添加消息到對話歷史。
+   * 新消息會添加到歷史的前面，如果消息數量超過設定的最大值，
+   * 最舊的消息會被移除。
+   *
+   * @param message 要添加的聊天消息
+   * @throws NullPointerException 如果消息為 null
    */
   public void addMessage(ChatMessage message) {
     messages.addFirst(message); // 新消息加到前面

@@ -14,7 +14,10 @@ import per.iiimabbie.discordbot.util.MessageUtils;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * 消息監聽器，處理所有消息事件
+ * 消息監聽器，負責處理所有 Discord 訊息事件。
+ * 這個類主要關注用戶對機器人的提及，並透過 AI 服務生成回應。
+ *
+ * @author iiimabbie
  */
 public class MessageListener extends ListenerAdapter {
 
@@ -51,8 +54,10 @@ public class MessageListener extends ListenerAdapter {
   }
 
   /**
-   * 處理@提及機器人的消息
-   * @param event 消息事件
+   * 處理特定的提及機器人的消息。
+   * 從消息中提取內容，排除提及部分，然後使用 AI 服務生成回應。
+   *
+   * @param event 包含提及機器人的消息事件
    */
   private void handleMention(MessageReceivedEvent event) {
     Message message = event.getMessage();
