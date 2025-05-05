@@ -88,10 +88,6 @@ commandManager.registerCommand(new YourNewCommand());
 
 編輯 `config.properties` 中的 `bot.system.prompt` 屬性來自訂機器人的回應風格。
 
-## 授權協議
+## 作者 & 授權協議
 
-本專案採用 MIT License 授權。
-
-## 作者
-
-© iiimabbie
+MIT © [iiimabbie](https://github.com/iiimabbie)
