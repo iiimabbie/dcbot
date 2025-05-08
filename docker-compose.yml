@@ -1,0 +1,10 @@
+services:
+  discord-bot:
+    container_name: discord-bot
+    build:
+      context: .
+      dockerfile: ../docker/java21/Dockerfile
+    command: java -jar target/discord-bot.jar
+    volumes:
+      - ./config.properties:/app/config.properties
+      - ./logs:/app/logs
