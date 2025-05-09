@@ -30,9 +30,6 @@ public class MessageListener extends ListenerAdapter {
   public MessageListener() {
     // 初始化 AI 服務
     String apiKey = ConfigLoader.get("gemini.api.key");
-    if (apiKey == null || apiKey.isEmpty()) {
-      throw new RuntimeException("Gemini API Key 未設定");
-    }
     this.aiService = new GeminiService(apiKey);
     logger.info("消息監聽器初始化完成");
   }

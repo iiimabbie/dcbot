@@ -29,17 +29,13 @@ public class BotCore implements EventListener {
   private static final Logger logger = LoggerFactory.getLogger(BotCore.class);
   private final JDA jda;
   private final CommandManager commandManager;
-  private final String guildId = ConfigLoader.get("guild.id");
+//  private final String guildId = ConfigLoader.get("guild.id");
 
   /**
    * 初始化機器人核心
    */
   public BotCore() {
     String token = ConfigLoader.get("discord.token");
-    if (token == null || token.isEmpty()) {
-      throw new IllegalStateException("Bot的token未設定");
-    }
-
     String statusText = ConfigLoader.getOrDefault("bot.status.text", "太好了是藥劑師我們有救了😭");
 
     // 初始化命令管理器
@@ -49,8 +45,8 @@ public class BotCore implements EventListener {
     commandManager.registerCommand(new HelpCommand(commandManager));
     // 註冊更多命令...
     // GUILD註冊
-    commandManager.registerGuildCommand(new ClearCommand(), guildId);
-    commandManager.registerGuildCommand(new HelpCommand(commandManager), guildId);
+//    commandManager.registerGuildCommand(new ClearCommand(), guildId);
+//    commandManager.registerGuildCommand(new HelpCommand(commandManager), guildId);
     // 註冊更多命令...
 
     this.jda = JDABuilder.createDefault(token)
@@ -84,7 +80,7 @@ public class BotCore implements EventListener {
     try {
       // 在 JDA 準備就緒後註冊斜線命令
       commandManager.registerCommandsToJDA(jda); // 全局
-      commandManager.registerGuildCommandsToJDA(jda, guildId); // Guild
+//      commandManager.registerGuildCommandsToJDA(jda, guildId); // Guild
     } catch (Exception e) {
       logger.error("註冊斜線命令失敗", e);
     }

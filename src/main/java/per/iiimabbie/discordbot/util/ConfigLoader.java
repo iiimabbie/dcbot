@@ -23,7 +23,11 @@ public class ConfigLoader {
   }
 
   public static String get(String key) {
-    return properties.getProperty(key);
+    String value = properties.getProperty(key);
+    if (value == null || value.isEmpty()) {
+      throw new IllegalStateException("必要的配置項 '" + key + "' 未設定");
+    }
+    return value;
   }
 
   public static String getOrDefault(String key, String defaultValue) {

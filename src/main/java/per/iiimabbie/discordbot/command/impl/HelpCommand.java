@@ -1,6 +1,5 @@
 package per.iiimabbie.discordbot.command.impl;
 
-import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import per.iiimabbie.discordbot.command.ButtonHandler;
 import per.iiimabbie.discordbot.command.CommandManager;
 import per.iiimabbie.discordbot.command.SlashCommand;
+import per.iiimabbie.discordbot.util.ButtonUtils;
+import per.iiimabbie.discordbot.util.EmbedUtils;
 
 /**
  * Discord 機器人幫助命令實現類。
@@ -33,8 +34,7 @@ public class HelpCommand implements SlashCommand, ButtonHandler {
   private static final Logger logger = LoggerFactory.getLogger(HelpCommand.class);
   private static final String COMMAND_NAME = "幫助";
   private static final String COMMAND_DESC = "列出所有命令";
-  private static final String BUTTON_NEXT = "help_next";
-  private static final String BUTTON_PREV = "help_prev";
+  private static final String ACTION_NAME = "help"; // 用於按鈕ID
   private static final int COMMANDS_PER_PAGE = 5;
 
   /**
@@ -109,13 +109,12 @@ public class HelpCommand implements SlashCommand, ButtonHandler {
       return;
     }
 
-    // 建立導航按鈕
-    Button prevButton = Button.primary(BUTTON_PREV, "上一頁").asDisabled();
-    Button nextButton = Button.primary(BUTTON_NEXT, "下一頁");
+    // 使用ButtonUtils創建分頁按鈕
+    List<Button> paginationButtons = ButtonUtils.createPaginationButtons("help", 1, getTotalPages());
 
     // 回應斜線命令
     event.replyEmbeds(helpEmbed)
-        .addActionRow(prevButton, nextButton)
+        .addActionRow(paginationButtons)
         .setEphemeral(true)  // 設為臨時訊息
         .queue(response -> {
           // 儲存用戶的頁面狀態
@@ -141,14 +140,27 @@ public class HelpCommand implements SlashCommand, ButtonHandler {
   public boolean handleButtonInteraction(ButtonInteractionEvent event) {
     String buttonId = event.getComponentId();
 
-    if (!buttonId.equals(BUTTON_NEXT) && !buttonId.equals(BUTTON_PREV)) {
+    // 使用ButtonUtils檢查按鈕ID是否匹配help前綴
+    boolean isNext = ButtonUtils.matchesPrefix(buttonId, ButtonUtils.PREFIX_NEXT);
+    boolean isPrev = ButtonUtils.matchesPrefix(buttonId, ButtonUtils.PREFIX_PREV);
+
+    // 檢查是否是我們處理的按鈕類型
+    if (!isNext && !isPrev) {
+      return false;
+    }
+    // 提取操作名稱，確認是否是help操作
+    String actionName = isNext ?
+        ButtonUtils.extractActionName(buttonId, ButtonUtils.PREFIX_NEXT) :
+        ButtonUtils.extractActionName(buttonId, ButtonUtils.PREFIX_PREV);
+
+    if (!ACTION_NAME.equals(actionName)) {
       return false;
     }
 
     String userId = event.getUser().getId();
     int currentPage = helpPages.getOrDefault(userId, 1);
 
-    if (buttonId.equals(BUTTON_NEXT)) {
+    if (isNext) {
       currentPage++;
     } else {
       currentPage--;
@@ -163,22 +175,12 @@ public class HelpCommand implements SlashCommand, ButtonHandler {
 
     // 創建新的嵌入和按鈕
     MessageEmbed helpEmbed = createHelpEmbed(currentPage);
-    Button prevButton = Button.primary(BUTTON_PREV, "上一頁");
-    Button nextButton = Button.primary(BUTTON_NEXT, "下一頁");
-
-    // 如果在第一頁，禁用前一頁按鈕
-    if (currentPage == 1) {
-      prevButton = prevButton.asDisabled();
-    }
-
-    // 如果在最後一頁，禁用下一頁按鈕
-    if (currentPage == totalPages) {
-      nextButton = nextButton.asDisabled();
-    }
+    // 使用ButtonUtils創建更新後的分頁按鈕
+    List<Button> updatedButtons = ButtonUtils.createPaginationButtons(ACTION_NAME, currentPage, totalPages);
 
     // 更新訊息
     event.editMessageEmbeds(helpEmbed)
-        .setActionRow(prevButton, nextButton)
+        .setActionRow(updatedButtons)
         .queue();
 
     return true;
@@ -197,10 +199,7 @@ public class HelpCommand implements SlashCommand, ButtonHandler {
    * @return 包含命令幫助信息的嵌入訊息對象
    */
   private MessageEmbed createHelpEmbed(int page) {
-    EmbedBuilder embed = new EmbedBuilder();
-    embed.setTitle("機器人命令幫助");
-    embed.setDescription("以下是可用的命令列表，每個命令的用法和說明：");
-    embed.setColor(Color.BLUE);
+    EmbedBuilder embed = EmbedUtils.pageEmbed("機器人命令幫助", "以下是可用的命令列表，每個命令的用法和說明：");
 
     // 獲取命令列表
     List<SlashCommand> commands = commandManager.getCommands();
@@ -212,10 +211,9 @@ public class HelpCommand implements SlashCommand, ButtonHandler {
       embed.addField("/" + command.getName(), command.getDescription(), false);
     }
 
+    // 添加分頁信息
     int totalPages = getTotalPages();
-    if (totalPages > 1) {
-      embed.setFooter(String.format("頁碼: %d/%d", page, totalPages));
-    }
+    EmbedUtils.addPagination(embed, page, totalPages);
 
     return embed.build();
   }
