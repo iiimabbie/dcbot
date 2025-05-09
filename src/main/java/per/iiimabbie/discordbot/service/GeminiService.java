@@ -25,9 +25,9 @@ public class GeminiService implements AiService {
   private final String apiKey;
   private final HttpClient httpClient;
   private final String systemPrompt;
-  private final static String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
   private static final int MAX_RETRIES = 3;
   private final String botName = ConfigLoader.get("bot.name");
+  private final String apiUrl = ConfigLoader.get("gemini.api.url");
 
   public GeminiService(String apiKey) {
     this.apiKey = apiKey;
@@ -43,7 +43,7 @@ public class GeminiService implements AiService {
       JSONObject requestBody = buildRequestBody(chatHistory);
 
       // 輸出請求內容用於調試
-      logger.debug("請求 URL: {}", API_URL + "?key=" + apiKey);
+      logger.debug("請求 URL: {}", apiUrl + "?key=" + apiKey);
       logger.debug("請求內容: {}", requestBody.toString(2));
 
       // 確保使用 UTF-8 編碼
@@ -52,7 +52,7 @@ public class GeminiService implements AiService {
 
       // 建立 HTTP 請求，明確設定編碼
       HttpRequest request = HttpRequest.newBuilder()
-          .uri(URI.create(API_URL + "?key=" + apiKey))
+          .uri(URI.create(apiUrl + "?key=" + apiKey))
           .header("Content-Type", "application/json; charset=UTF-8")
           .POST(HttpRequest.BodyPublishers.ofByteArray(requestBodyBytes))
           .build();
@@ -92,7 +92,6 @@ public class GeminiService implements AiService {
                 return CompletableFuture.completedFuture(
                     "抱歉，我遇到了編碼問題。請嘗試簡單的英文提問，或聯繫管理員檢查系統編碼設置。");
               }
-
               return CompletableFuture.completedFuture(result);
             } catch (Exception e) {
               logger.error("解析回應失敗: {}", e.getMessage(), e);
@@ -178,7 +177,7 @@ public class GeminiService implements AiService {
     // AI參數
     JSONObject generationConfig = new JSONObject();
     generationConfig.put("temperature", 0.7);
-    generationConfig.put("maxOutputTokens", 800);
+    generationConfig.put("maxOutputTokens", 2000);
     generationConfig.put("topP", 0.95);
     generationConfig.put("topK", 40);
     requestBody.put("generationConfig", generationConfig);
