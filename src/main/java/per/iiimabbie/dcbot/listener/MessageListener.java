@@ -24,7 +24,7 @@ public class MessageListener extends ListenerAdapter {
 
   @Override
   public void onMessageReceived(MessageReceivedEvent event) {
-    // 忽略所有機器人（包括自己）
+    // 忽略所有bot（包括自己）
     if (event.getAuthor().isBot()) {
       return;
     }
@@ -40,8 +40,8 @@ public class MessageListener extends ListenerAdapter {
   /**
    * 判斷是否需要處理這個訊息
    * 條件：
-   * 1. 直接 @ 機器人
-   * 2. 在討論串中且機器人有參與過
+   * 1. 直接 @ bot
+   * 2. 在討論串中且bot有參與過
    * 3. 私訊
    */
   private boolean shouldProcessMessage(MessageReceivedEvent event) {
@@ -51,12 +51,12 @@ public class MessageListener extends ListenerAdapter {
       return true;
     }
 
-    // 檢查是否 @ 機器人
+    // 檢查是否 @ bot
     if (event.getMessage().getMentions().isMentioned(event.getJDA().getSelfUser())) {
       return true;
     }
 
-    // 如果在討論串中，直接處理（機器人能收到訊息就代表它在這個討論串裡）
+    // 如果在討論串中，直接處理（bot能收到訊息就代表它在這個討論串裡）
     return event.getChannel().getType() == ChannelType.GUILD_PUBLIC_THREAD ||
         event.getChannel().getType() == ChannelType.GUILD_PRIVATE_THREAD;
   }
@@ -66,9 +66,11 @@ public class MessageListener extends ListenerAdapter {
    */
   private void processMessageWithReactions(MessageReceivedEvent event) {
 
-    /* String rawMessage = event.getMessage().getContentRaw(); // "<@1367355249643360317> 收"
+    /*
+    String rawMessage = event.getMessage().getContentRaw(); // "<@1367355249643360317> 收"
     String cleanMessage = event.getMessage().getContentDisplay(); // "@bot名稱 收"
-    String strippedMessage = rawMessage.replaceAll("<@!?\\d+>\\s*", ""); // "收" */
+    String strippedMessage = rawMessage.replaceAll("<@!?\\d+>\\s*", ""); // "收"
+    */
 
     Message userMessage = event.getMessage();
     String username = event.getAuthor().getName();

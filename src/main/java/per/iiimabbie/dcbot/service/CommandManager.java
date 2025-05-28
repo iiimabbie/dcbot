@@ -26,7 +26,7 @@ public class CommandManager {
   private final Map<String, SlashCommand> guildCommands = new HashMap<>(); // owner專用指令
 
   /**
-   * 註冊public指令
+   * 註冊global指令
    */
   public void registerGlobalCommand(SlashCommand command) {
     globalCommands.put(command.getName(), command);

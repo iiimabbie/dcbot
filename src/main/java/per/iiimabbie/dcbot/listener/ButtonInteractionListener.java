@@ -51,7 +51,7 @@ public class ButtonInteractionListener extends ListenerAdapter {
         }
       }
       case "refresh_status" -> {
-        // 重新整理狀態 - 這裡需要重新建立 SlashCommandInteractionEvent
+        // TODO 重新整理狀態 - 這裡是騙人的 還沒做
         // 或者直接回應新的狀態資訊
         event.reply("🔄 狀態已重新整理！使用 `/status` 查看最新狀態")
             .setEphemeral(true)

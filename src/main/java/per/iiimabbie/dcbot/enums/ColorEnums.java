@@ -23,18 +23,16 @@ public enum ColorEnums {
   PURPLE(new Color(167, 154, 178), "煙紫");    // 特殊功能、高級選項等
 
   /**
-   * -- GETTER --
    *  獲取顏色物件
    */
   private final Color color;
   /**
-   * -- GETTER --
    *  獲取顏色描述
    */
   private final String description;
 
   /**
-   * 建構子 - 創建一個帶有色彩值和描述的顏色枚舉
+   * 創建一個帶有色彩值和描述的顏色枚舉
    *
    * @param color 顏色物件
    * @param description 顏色描述/名稱

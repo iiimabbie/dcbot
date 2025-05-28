@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageHistory;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -37,7 +38,9 @@ public class GeminiService {
 
   private final GeminiConfig geminiConfig;
   private final BotConfig botConfig;
-  private final RestTemplate restTemplate = new RestTemplate();
+  // 使用配置好的 RestTemplate, 需配合lombok.config
+  @Qualifier("defaultRestTemplate")
+  private final RestTemplate restTemplate;
 
   // 設定 ObjectMapper 忽略未知欄位
   private final ObjectMapper objectMapper = new ObjectMapper()
@@ -255,21 +258,29 @@ public class GeminiService {
   private List<GeminiRequest.SafetySetting> buildSafetySettings() {
     return List.of(
         GeminiRequest.SafetySetting.builder()
-            .category("HARM_CATEGORY_HARASSMENT")
+            .category("HARM_CATEGORY_HARASSMENT") // 防止騷擾內容
             .threshold("BLOCK_MEDIUM_AND_ABOVE")
             .build(),
         GeminiRequest.SafetySetting.builder()
-            .category("HARM_CATEGORY_HATE_SPEECH")
+            .category("HARM_CATEGORY_HATE_SPEECH") // 防止仇恨言論
             .threshold("BLOCK_MEDIUM_AND_ABOVE")
             .build(),
         GeminiRequest.SafetySetting.builder()
-            .category("HARM_CATEGORY_SEXUALLY_EXPLICIT")
+            .category("HARM_CATEGORY_SEXUALLY_EXPLICIT") // 防止性露骨內容
             .threshold("BLOCK_MEDIUM_AND_ABOVE")
             .build(),
         GeminiRequest.SafetySetting.builder()
-            .category("HARM_CATEGORY_DANGEROUS_CONTENT")
+            .category("HARM_CATEGORY_DANGEROUS_CONTENT") // 防止危險內容
             .threshold("BLOCK_MEDIUM_AND_ABOVE")
             .build()
     );
+    /*
+    Gemini API 提供的閾值選項有：
+    BLOCK_NONE：不阻止任何內容
+    BLOCK_LOW_AND_ABOVE：阻止輕微及以上程度的內容
+    BLOCK_MEDIUM_AND_ABOVE：阻止中等及以上程度的內容
+    BLOCK_HIGH_AND_ABOVE：只阻止高度及以上程度的內容
+    BLOCK_ONLY_MAXIMUM：只阻止最高程度的內容
+    */
   }
 }

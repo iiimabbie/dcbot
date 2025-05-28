@@ -59,7 +59,7 @@ public class DiscordService {
       // 初始化 emoji 管理器
       emojiManager.initialize(jda);
 
-      // 註冊指令
+      // 註冊所有指令
       registerCommands();
 
       log.info("Discord 機器人已啟動成功！");
