@@ -24,7 +24,7 @@ public class ButtonInteractionListener extends ListenerAdapter {
     log.info("收到按鈕點擊: {} - 用戶: {}", buttonId, event.getUser().getName());
 
     switch (buttonId) {
-      case "commands" -> {
+      case "show_commands" -> {
         try {
           // 直接調用 CommandsCommand 的功能
           event.replyEmbeds(commandsCommand.createCommandsEmbed())
@@ -49,6 +49,19 @@ public class ButtonInteractionListener extends ListenerAdapter {
                 .queue();
           }
         }
+      }
+      case "refresh_status" -> {
+        // 重新整理狀態 - 這裡需要重新建立 SlashCommandInteractionEvent
+        // 或者直接回應新的狀態資訊
+        event.reply("🔄 狀態已重新整理！使用 `/status` 查看最新狀態")
+            .setEphemeral(true)
+            .queue();
+      }
+      case "quick_ping" -> {
+        long gatewayPing = event.getJDA().getGatewayPing();
+        event.reply(String.format("🏓 當前延遲: %d ms", gatewayPing))
+            .setEphemeral(true)
+            .queue();
       }
       default -> {
         log.warn("未處理的按鈕互動: {}", buttonId);

@@ -88,6 +88,10 @@ public class BotException extends RuntimeException {
     return new BotException(ErrorType.NETWORK_ERROR, details, cause);
   }
 
+  public static BotException permissionDenied() {
+    return new BotException(ErrorType.PERMISSION_DENIED, ErrorType.PERMISSION_DENIED.getErrMessage());
+  }
+
   public static BotException unknownError(String details) {
     return new BotException(ErrorType.UNKNOWN_ERROR, details);
   }

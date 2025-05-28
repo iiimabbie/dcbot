@@ -12,6 +12,7 @@ public class BotConfig {
   private String name;
   private Status status;
   private String systemPrompt;
+  private String ownerId;
 
   @Data
   public static class Status {
