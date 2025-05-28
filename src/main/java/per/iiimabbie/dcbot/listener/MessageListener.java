@@ -9,7 +9,6 @@ import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.springframework.stereotype.Component;
-import per.iiimabbie.dcbot.config.BotConfig;
 import per.iiimabbie.dcbot.enums.BotEmojis.Tool;
 import per.iiimabbie.dcbot.exception.BotException;
 import per.iiimabbie.dcbot.service.EmojiManager;
@@ -87,7 +86,7 @@ public class MessageListener extends ListenerAdapter {
     // 步驟2: 顯示打字中狀態
     event.getChannel().sendTyping().queue();
 
-    // 步驟3: GeminiAPI
+    // 步驟3: 異步處理 Gemini API
     CompletableFuture.supplyAsync(() -> {
       try {
         return geminiService.processMessage(event.getChannel(), event.getMessage());
@@ -95,15 +94,15 @@ public class MessageListener extends ListenerAdapter {
         // 記錄具體錯誤，但返回用戶友好的訊息
         log.error("AI 處理失敗 - 錯誤類型: {}, 訊息: {}",
             e.getErrorType(), e.getMessage(), e);
-        return getErrorMessage(e.getErrorType());
+        return e.getErrorType().getErrMessage(); // 統一使用 enum 的訊息
       } catch (Exception e) {
         // 未預期的錯誤
         log.error("處理訊息時發生未知錯誤", e);
-        return getErrorMessage(BotException.ErrorType.UNKNOWN_ERROR);
+        return BotException.ErrorType.UNKNOWN_ERROR.getErrMessage(); // 統一使用 enum
       }
     }).thenAccept(response -> {
-      log.info("AI 回應訊息 - 內容: {}",
-          response);
+      log.info("AI 回應訊息 - 內容: {}", response);
+
       // 步驟4: 發送回覆
       event.getChannel().sendMessage(response).queue(
           sentMessage -> {
@@ -114,7 +113,7 @@ public class MessageListener extends ListenerAdapter {
           },
           error -> {
             log.error("發送回覆失敗", error);
-            // 發送失敗時也要清除反應
+            // 發送失敗時也要清除反應並顯示錯誤
             errorReaction(userMessage, loadingEmoji);
           }
       );
@@ -122,25 +121,20 @@ public class MessageListener extends ListenerAdapter {
   }
 
   /**
-   * 根據錯誤類型返回對應的用戶友好訊息
-   */
-  private String getErrorMessage(BotException.ErrorType errorType) {
-    return switch (errorType) {
-      case GEMINI_API_ERROR -> "我的大腦暫時短路了，請稍後再試試";
-      case DISCORD_API_ERROR -> "Discord 好像壞掉了呢害我拿不到資料T_T";
-      case NETWORK_ERROR -> "網路好像有點問題，等會兒再找我聊天吧";
-      case CONFIGURATION_ERROR -> "我的設定好像有問題，請聯繫管理員";
-      case UNKNOWN_ERROR -> "發生了一些意外狀況，我正在努力修復中";
-    };
-  }
-
-  /**
-   * 錯誤反應 - 移除 loading /添加 death
+   * 錯誤反應處理
+   * 移除 loading emoji，添加錯誤 emoji
    */
   private void errorReaction(Message message, String loadingEmoji) {
     if (!loadingEmoji.isEmpty()) {
       message.removeReaction(Emoji.fromFormatted(loadingEmoji)).queue();
     }
-    message.addReaction(Emoji.fromUnicode("💀")).queue();
+
+    // 優先使用自定義錯誤 emoji，否則使用 Unicode
+    String errorEmoji = emojiManager.getToolEmoji(Tool.ERROR);
+    if (!errorEmoji.isEmpty()) {
+      message.addReaction(Emoji.fromFormatted(errorEmoji)).queue();
+    } else {
+      message.addReaction(Emoji.fromUnicode("💀")).queue();
+    }
   }
 }

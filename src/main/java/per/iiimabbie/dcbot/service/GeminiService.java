@@ -26,6 +26,7 @@ import per.iiimabbie.dcbot.exception.BotException;
 
 /**
  * Gemini API 服務
+ * 負責處理與 Google Gemini AI 的所有交互
  *
  * @author iiimabbie
  */
@@ -51,6 +52,7 @@ public class GeminiService {
    * @param channel        Discord 頻道
    * @param currentMessage 當前訊息
    * @return AI 回應文字
+   * @throws BotException 當處理過程中發生錯誤時拋出
    */
   public String processMessage(MessageChannel channel, Message currentMessage) {
     try {
@@ -64,17 +66,18 @@ public class GeminiService {
           .safetySettings(buildSafetySettings())
           .build();
 
-      // 3. 發送請求
+      // 3. 發送請求並返回結果
       return sendGeminiRequest(request);
 
+    } catch (BotException e) {
+      // 重新拋出已知的業務異常
+      throw e;
     } catch (JsonProcessingException e) {
       log.error("JSON 處理失敗", e);
-      throw new BotException(BotException.ErrorType.GEMINI_API_ERROR,
-          "API 請求格式錯誤", e);
+      throw BotException.geminiError("API 請求格式錯誤", e);
     } catch (Exception e) {
-      log.error("處理 Gemini 請求時發生錯誤", e);
-      throw new BotException(BotException.ErrorType.GEMINI_API_ERROR,
-          "AI 服務暫時無法使用", e);
+      log.error("處理 Gemini 請求時發生未知錯誤", e);
+      throw BotException.geminiError("AI 服務暫時無法使用", e);
     }
   }
 
@@ -85,71 +88,79 @@ public class GeminiService {
   private List<GeminiRequest.Content> buildConversationHistory(MessageChannel channel, Message currentMessage) {
     List<GeminiRequest.Content> contents = new ArrayList<>();
 
-    // 1. 先加入 system prompt（固定在第一位）
-    if (botConfig.getSystemPrompt() != null && !botConfig.getSystemPrompt().trim().isEmpty()) {
-      contents.add(GeminiRequest.Content.builder()
-          .role("user")
-          .parts(List.of(GeminiRequest.Part.builder()
-              .text("System: " + botConfig.getSystemPrompt())
-              .build()))
-          .build());
-    }
-    // Model 確認回應 (model 角色)
-    contents.add(GeminiRequest.Content.builder()
-        .role("model")
-        .parts(List.of(GeminiRequest.Part.builder()
-            .text("好的，我是" + botConfig.getName() + "，我會按照指示與用戶互動。")
-            .build()))
-        .build());
-
-    // 2. 取得歷史訊息
     try {
-      MessageHistory history = channel.getHistoryBefore(currentMessage, MAX_HISTORY_COUNT).complete();
-      List<Message> messages = new ArrayList<>(history.getRetrievedHistory());
-
-      // 反轉順序，讓最舊的訊息在前面
-      Collections.reverse(messages);
-
-      // 3. 處理歷史訊息
-      for (Message msg : messages) {
-        // 跳過系統訊息和空訊息
-        if (msg.getAuthor().isSystem() || msg.getContentRaw().trim().isEmpty()) {
-          continue;
-        }
-
-        String messageContent = cleanMessageContent(msg);
-        if (messageContent.isEmpty()) {
-          continue;
-        }
-
-        // 判斷是機器人還是用戶
-        String role = msg.getAuthor().isBot() ? "model" : "user";
-
+      // 1. 先加入 system prompt（固定在第一位）
+      if (botConfig.getSystemPrompt() != null && !botConfig.getSystemPrompt().trim().isEmpty()) {
         contents.add(GeminiRequest.Content.builder()
-            .role(role)
+            .role("user")
             .parts(List.of(GeminiRequest.Part.builder()
-                .text(messageContent)
+                .text("System: " + botConfig.getSystemPrompt())
                 .build()))
             .build());
       }
 
-    } catch (Exception e) {
-      log.warn("取得歷史訊息失敗，僅使用當前訊息", e);
-    }
-
-    // 4. 加入當前訊息
-    String currentContent = cleanMessageContent(currentMessage);
-    if (!currentContent.isEmpty()) {
+      // Model 確認回應 (model 角色)
       contents.add(GeminiRequest.Content.builder()
-          .role("user")
+          .role("model")
           .parts(List.of(GeminiRequest.Part.builder()
-              .text(currentContent)
+              .text("好的，我是" + botConfig.getName() + "，我會按照指示與用戶互動。")
               .build()))
           .build());
-    }
 
-    log.debug("建立了 {} 則對話內容", contents.size());
-    return contents;
+      // 2. 取得歷史訊息
+      try {
+        MessageHistory history = channel.getHistoryBefore(currentMessage, MAX_HISTORY_COUNT).complete();
+        List<Message> messages = new ArrayList<>(history.getRetrievedHistory());
+
+        // 反轉順序，讓最舊的訊息在前面
+        Collections.reverse(messages);
+
+        // 3. 處理歷史訊息
+        for (Message msg : messages) {
+          // 跳過系統訊息和空訊息
+          if (msg.getAuthor().isSystem() || msg.getContentRaw().trim().isEmpty()) {
+            continue;
+          }
+
+          String messageContent = cleanMessageContent(msg);
+          if (messageContent.isEmpty()) {
+            continue;
+          }
+
+          // 判斷是機器人還是用戶
+          String role = msg.getAuthor().isBot() ? "model" : "user";
+
+          contents.add(GeminiRequest.Content.builder()
+              .role(role)
+              .parts(List.of(GeminiRequest.Part.builder()
+                  .text(messageContent)
+                  .build()))
+              .build());
+        }
+
+      } catch (Exception e) {
+        log.warn("取得歷史訊息失敗，僅使用當前訊息: {}", e.getMessage());
+        // 這裡不拋出異常，因為即使沒有歷史訊息也能繼續處理
+      }
+
+      // 4. 加入當前訊息
+      String currentContent = cleanMessageContent(currentMessage);
+      if (!currentContent.isEmpty()) {
+        contents.add(GeminiRequest.Content.builder()
+            .role("user")
+            .parts(List.of(GeminiRequest.Part.builder()
+                .text(currentContent)
+                .build()))
+            .build());
+      }
+
+      log.debug("建立了 {} 則對話內容", contents.size());
+      return contents;
+
+    } catch (Exception e) {
+      log.error("建立對話歷史時發生錯誤", e);
+      throw BotException.discordError("無法取得對話歷史", e);
+    }
   }
 
   /**
@@ -175,6 +186,10 @@ public class GeminiService {
 
   /**
    * 發送 Gemini API 請求
+   *
+   * @param request Gemini 請求物件
+   * @return AI 回應文字
+   * @throws BotException 當 API 調用失敗時拋出
    */
   private String sendGeminiRequest(GeminiRequest request) throws JsonProcessingException {
     String url = geminiConfig.getApi().getUrl() + "?key=" + geminiConfig.getApi().getKey();
@@ -188,14 +203,14 @@ public class GeminiService {
     log.debug("Gemini 請求 JSON: {}", requestJson);
 
     HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
+
     try {
       // 發送請求
       ResponseEntity<String> response = restTemplate.exchange(
           url, HttpMethod.POST, entity, String.class);
 
       if (!response.getStatusCode().is2xxSuccessful()) {
-        throw new BotException(BotException.ErrorType.GEMINI_API_ERROR,
-            "Gemini API 回應錯誤: " + response.getStatusCode());
+        throw BotException.geminiError("Gemini API 回應錯誤: " + response.getStatusCode());
       }
 
       log.debug("Gemini API 原始回應: {}", response.getBody());
@@ -206,17 +221,19 @@ public class GeminiService {
 
       String responseText = geminiResponse.getFirstCandidateText();
       if (responseText == null || responseText.trim().isEmpty()) {
+        log.warn("Gemini 回應為空，使用預設訊息");
         return "抱歉，我沒有收到有效的回應...";
       }
 
       log.debug("Gemini 回應: {}", responseText);
       return responseText;
+
     } catch (BotException e) {
-      throw e; // 重新拋出自己的異常
+      // 重新拋出自己的異常
+      throw e;
     } catch (Exception e) {
       log.error("調用 Gemini API 時發生網路錯誤", e);
-      throw new BotException(BotException.ErrorType.NETWORK_ERROR,
-          "網路連線問題", e);
+      throw BotException.networkError("網路連線問題", e);
     }
   }
 

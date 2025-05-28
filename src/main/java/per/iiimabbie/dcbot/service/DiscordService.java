@@ -10,9 +10,13 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.springframework.stereotype.Service;
+import per.iiimabbie.dcbot.command.impl.CommandsCommand;
+import per.iiimabbie.dcbot.command.impl.HelpCommand;
 import per.iiimabbie.dcbot.config.BotConfig;
 import per.iiimabbie.dcbot.config.DiscordConfig;
+import per.iiimabbie.dcbot.listener.ButtonInteractionListener;
 import per.iiimabbie.dcbot.listener.MessageListener;
+import per.iiimabbie.dcbot.listener.SlashCommandListener;
 
 @Slf4j
 @Service
@@ -22,7 +26,12 @@ public class DiscordService {
   private final DiscordConfig discordConfig;
   private final BotConfig botConfig;
   private final MessageListener messageListener;
+  private final SlashCommandListener slashCommandListener;
+  private final ButtonInteractionListener buttonInteractionListener;
   private final EmojiManager emojiManager;
+  private final CommandManager commandManager;
+  private final HelpCommand helpCommand;
+  private final CommandsCommand commandsCommand;
   private JDA jda;
 
   @PostConstruct
@@ -38,18 +47,33 @@ public class DiscordService {
               GatewayIntent.MESSAGE_CONTENT,
               GatewayIntent.GUILD_MEMBERS
           )
-          .addEventListeners(messageListener)
+          .addEventListeners(messageListener, slashCommandListener, buttonInteractionListener)
           .build();
 
       jda.awaitReady();
       
       // 初始化 emoji 管理器
       emojiManager.initialize(jda);
+
+      // 註冊指令
+      registerCommands();
+
       log.info("Discord 機器人已啟動成功！");
 
     } catch (Exception e) {
       log.error("Discord 機器人初始化失敗", e);
     }
+  }
+
+  /**
+   * 註冊所有指令
+   */
+  private void registerCommands() {
+    commandManager.registerCommand(helpCommand);
+    commandManager.registerCommand(commandsCommand);
+
+    // 更新 Discord 上的指令
+    commandManager.updateCommands(jda);
   }
 
   @PreDestroy
