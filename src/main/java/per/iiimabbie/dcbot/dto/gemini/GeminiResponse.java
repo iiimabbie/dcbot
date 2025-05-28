@@ -1,9 +1,8 @@
 package per.iiimabbie.dcbot.dto.gemini;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 /**
  * Gemini API 回應資料模型

@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableConfigurationProperties
-@EnableScheduling  // 加這個
+@EnableScheduling
 public class DcbotApplication {
 
     public static void main(String[] args) {
