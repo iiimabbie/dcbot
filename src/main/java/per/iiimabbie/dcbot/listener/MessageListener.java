@@ -103,8 +103,6 @@ public class MessageListener extends ListenerAdapter {
         return BotException.ErrorType.UNKNOWN_ERROR.getErrMessage(); // 統一使用 enum
       }
     }).thenAccept(response -> {
-      log.info("AI 回應訊息 - 內容: {}", response);
-
       // 步驟4: 發送回覆
       event.getChannel().sendMessage(response).queue(
           sentMessage -> {

@@ -12,8 +12,8 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.springframework.stereotype.Service;
 import per.iiimabbie.dcbot.command.impl.CommandsCommand;
 import per.iiimabbie.dcbot.command.impl.HelpCommand;
-import per.iiimabbie.dcbot.command.impl.owner.PingCommand;
-import per.iiimabbie.dcbot.command.impl.owner.StatusCommand;
+import per.iiimabbie.dcbot.command.impl.PingCommand;
+import per.iiimabbie.dcbot.command.impl.StatusCommand;
 import per.iiimabbie.dcbot.config.BotConfig;
 import per.iiimabbie.dcbot.config.DiscordConfig;
 import per.iiimabbie.dcbot.listener.ButtonInteractionListener;
@@ -76,9 +76,9 @@ public class DiscordService {
     // 註冊public指令
     commandManager.registerGlobalCommand(helpCommand);
     commandManager.registerGlobalCommand(commandsCommand);
+    commandManager.registerGlobalCommand(pingCommand);
+    commandManager.registerGlobalCommand(statusCommand);
     // 註冊private專用指令
-    commandManager.registerGuildCommand(pingCommand);
-    commandManager.registerGuildCommand(statusCommand);
 
     // 更新 Discord 上的指令
     commandManager.updateCommands(jda, discordConfig.getGuild().getId());

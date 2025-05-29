@@ -29,10 +29,10 @@ public class ConfigValidationService {
       validateGeminiConfig();
       validateBotConfig();
 
-      log.info("✅ 所有配置驗證通過");
+      log.info("所有配置驗證通過");
 
     } catch (ConfigurationException e) {
-      log.error("❌ 配置驗證失敗: {}", e.getMessage());
+      log.error("配置驗證失敗: {}", e.getMessage());
       // 直接終止應用
       System.exit(1);
     }
@@ -49,15 +49,13 @@ public class ConfigValidationService {
     }
 
     if (discordConfig.getGuild() == null || isBlank(discordConfig.getGuild().getId())) {
-      log.warn("⚠️ Guild ID 未設定，部分功能可能無法使用");
+      log.warn("Guild ID 未設定，部分功能可能無法使用");
     } else {
       // 檢查 Guild ID 格式 (應該是純數字)
       if (!discordConfig.getGuild().getId().matches("\\d+")) {
         throw new ConfigurationException("Guild ID 格式不正確，應為純數字");
       }
     }
-
-    log.info("✅ Discord 配置驗證通過");
   }
 
   private void validateGeminiConfig() throws ConfigurationException {
@@ -75,10 +73,8 @@ public class ConfigValidationService {
 
     // 檢查 API Key 格式 (Google API Key 通常以 AIza 開頭)
     if (!geminiConfig.getApi().getKey().startsWith("AIza")) {
-      log.warn("⚠️ Gemini API Key 格式可能不正確 (應以 AIza 開頭)");
+      log.warn("Gemini API Key 格式可能不正確 (應以 AIza 開頭)");
     }
-
-    log.info("✅ Gemini 配置驗證通過");
   }
 
   private void validateBotConfig() throws ConfigurationException {
@@ -87,23 +83,21 @@ public class ConfigValidationService {
     }
 
     if (botConfig.getStatus() == null || isBlank(botConfig.getStatus().getText())) {
-      log.warn("⚠️ Bot 狀態文字未設定，將使用預設值");
+      log.warn("Bot 狀態文字未設定，將使用預設值");
     }
 
     if (isBlank(botConfig.getSystemPrompt())) {
-      log.warn("⚠️ System Prompt 未設定，AI 行為可能不符預期");
+      log.warn("System Prompt 未設定，AI 行為可能不符預期");
     }
 
     if (isBlank(botConfig.getOwnerId())) {
-      log.warn("⚠️ Bot Owner ID 未設定，Owner 指令將無法使用");
+      log.warn("Bot Owner ID 未設定，Owner 指令將無法使用");
     } else {
       // 檢查 Owner ID 格式
       if (!botConfig.getOwnerId().matches("\\d+")) {
         throw new ConfigurationException("Bot Owner ID 格式不正確，應為純數字");
       }
     }
-
-    log.info("✅ Bot 配置驗證通過");
   }
 
   private boolean isValidDiscordToken(String token) {

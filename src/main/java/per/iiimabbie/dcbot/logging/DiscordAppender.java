@@ -2,20 +2,17 @@ package per.iiimabbie.dcbot.logging;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
-import java.awt.Color;
-import lombok.Setter;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import per.iiimabbie.dcbot.enums.ColorEnums;
+import java.util.concurrent.LinkedBlockingQueue;
+import lombok.Setter;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestTemplate;
 
 @Setter
 public class DiscordAppender extends AppenderBase<ILoggingEvent> {
@@ -37,15 +34,11 @@ public class DiscordAppender extends AppenderBase<ILoggingEvent> {
   protected void append(ILoggingEvent event) {
     // 只處理指定級別以上的日誌
     if (event.getLevel().isGreaterOrEqual(ch.qos.logback.classic.Level.toLevel(level))) {
-      // 只處理指定級別以上的日誌
-      if (event.getLevel().isGreaterOrEqual(ch.qos.logback.classic.Level.toLevel(level))) {
         boolean offered = eventQueue.offer(event);
         if (!offered) {
           // 隊列已滿時的處理策略
           System.err.println("Discord log 隊列已滿，事件已丟棄：" + event.getFormattedMessage());
         }
-      }
-
     }
   }
 
@@ -111,12 +104,12 @@ public class DiscordAppender extends AppenderBase<ILoggingEvent> {
     }
   }
 
-  private Color getColorByLevel(String level) {
+  private int getColorByLevel(String level) {
     return switch (level) {
-      case "ERROR" -> ColorEnums.RED.getColor();  // 紅色
-      case "WARN" -> ColorEnums.ORANGE.getColor();   // 橘色
-      case "INFO" -> ColorEnums.GREEN.getColor();   // 綠色
-      default -> ColorEnums.PURPLE.getColor();       // 紫色
+      case "ERROR" -> 0xA26769;  // 紅色
+      case "WARN" -> 0xD8A47F;   // 橘色
+      case "INFO" -> 0xA8C3A1;   // 綠色
+      default -> 0xA79AB2;       // 紫色
     };
   }
 

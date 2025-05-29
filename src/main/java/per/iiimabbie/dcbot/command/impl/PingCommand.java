@@ -1,4 +1,4 @@
-package per.iiimabbie.dcbot.command.impl.owner;
+package per.iiimabbie.dcbot.command.impl;
 
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
@@ -6,7 +6,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import org.springframework.stereotype.Component;
 import per.iiimabbie.dcbot.command.SlashCommand;
 import per.iiimabbie.dcbot.exception.BotException;
-import per.iiimabbie.dcbot.util.PermissionUtil;
 
 /**
  * Ping 指令 - 測試機器人回應延遲
@@ -14,8 +13,6 @@ import per.iiimabbie.dcbot.util.PermissionUtil;
 @Component
 @RequiredArgsConstructor
 public class PingCommand implements SlashCommand {
-
-  private final PermissionUtil permissionUtil;
 
   @Override
   public String getName() {
@@ -30,16 +27,12 @@ public class PingCommand implements SlashCommand {
   @Override
   public void execute(SlashCommandInteractionEvent event) {
 
-    // 權限檢查
-    permissionUtil.requireOwner(event);
-
     try {
       // 記錄開始時間
       long startTime = Instant.now().toEpochMilli();
 
       // 先回應一個臨時訊息
       event.reply("🏓 計算中...")
-          .setEphemeral(true)
           .queue(interactionHook -> {
             // 計算回應時間
             long responseTime = Instant.now().toEpochMilli() - startTime;
@@ -49,10 +42,12 @@ public class PingCommand implements SlashCommand {
 
             // 建立詳細的延遲資訊
             String pingInfo = String.format(
-                "🏓 **Pong!**\n\n" +
-                    "📡 **WebSocket 延遲**: %d ms\n" +
-                    "⚡ **回應時間**: %d ms\n" +
-                    "🔗 **連線狀態**: %s",
+                """
+                    🏓 **Pong!**
+                    
+                    **WebSocket 延遲**: %d ms
+                    **回應時間**: %d ms
+                    **連線狀態**: %s""",
                 gatewayPing,
                 responseTime,
                 getConnectionStatus(gatewayPing)

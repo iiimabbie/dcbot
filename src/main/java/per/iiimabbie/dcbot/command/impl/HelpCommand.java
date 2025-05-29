@@ -1,16 +1,19 @@
 package per.iiimabbie.dcbot.command.impl;
 
 import java.time.Instant;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.springframework.stereotype.Component;
 import per.iiimabbie.dcbot.command.SlashCommand;
 import per.iiimabbie.dcbot.config.BotConfig;
+import per.iiimabbie.dcbot.enums.BotEmojis.Tool;
 import per.iiimabbie.dcbot.enums.ColorEnums;
-import per.iiimabbie.dcbot.service.MessageBuilderService;
+import per.iiimabbie.dcbot.service.EmojiManager;
 
 /**
  * Help 指令 - 顯示機器人使用說明
@@ -20,7 +23,7 @@ import per.iiimabbie.dcbot.service.MessageBuilderService;
 public class HelpCommand implements SlashCommand {
 
   private final BotConfig botConfig;
-  private final MessageBuilderService messageBuilder;
+  private final EmojiManager emojiManager;
 
   @Override
   public String getName() {
@@ -34,11 +37,13 @@ public class HelpCommand implements SlashCommand {
 
   @Override
   public void execute(SlashCommandInteractionEvent event) {
-    MessageEmbed helpEmbed = createHelpEmbed();
+    MessageEmbed helpEmbed = createHelpEmbed(event);
 
     // 創建按鈕
     Button commandsButton = Button.primary("show_commands", "📋 查看所有指令");
-    Button supportButton = Button.link("https://github.com/iiimabbie/dcbot", "🆘 GitHub");
+    Button supportButton;
+    Optional<Emoji> githubEmoji = emojiManager.getEmojiObject(Tool.GITHUB.getName());
+    supportButton = githubEmoji.map(emoji -> Button.link("https://github.com/iiimabbie/dcbot", "GitHub").withEmoji(emoji)).orElseGet(() -> Button.link("https://github.com/iiimabbie/dcbot", "🆘 GitHub"));
 
     event.replyEmbeds(helpEmbed)
         .addActionRow(commandsButton, supportButton)
@@ -48,12 +53,12 @@ public class HelpCommand implements SlashCommand {
   /**
    * 創建幫助說明 Embed
    */
-  private MessageEmbed createHelpEmbed() {
+  private MessageEmbed createHelpEmbed(SlashCommandInteractionEvent event) {
     return new EmbedBuilder()
         .setTitle("🤖 " + botConfig.getName() + " 使用說明")
         .setDescription("嗨～我是 " + botConfig.getName() + "，一隻可愛的 Discord 機器人！\n")
         .setColor(ColorEnums.BLUE.getColor())
-        .setThumbnail("https://cdn.discordapp.com/embed/avatars/0.png") // TODO 有空找一下哪裡地方放機器人頭像
+        .setThumbnail(event.getJDA().getSelfUser().getAvatarUrl())
 
         // 基本功能
         .addField("💬 聊天功能",

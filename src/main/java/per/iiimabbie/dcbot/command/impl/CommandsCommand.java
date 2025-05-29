@@ -72,9 +72,6 @@ public class CommandsCommand implements SlashCommand {
           commandList.toString(), false);
     }
 
-    builder.addField("💬 聊天功能",
-        "直接 @ 機器人即可開始聊天\n支援討論串和私訊", false);
-
     builder.setFooter("提示：使用 / 開頭會有自動補完功能", null);
 
     return builder.build();

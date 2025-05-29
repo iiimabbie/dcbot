@@ -1,8 +1,9 @@
-package per.iiimabbie.dcbot.command.impl.owner;
+package per.iiimabbie.dcbot.command.impl;
 
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
@@ -11,7 +12,6 @@ import per.iiimabbie.dcbot.command.SlashCommand;
 import per.iiimabbie.dcbot.config.BotConfig;
 import per.iiimabbie.dcbot.enums.ColorEnums;
 import per.iiimabbie.dcbot.exception.BotException;
-import per.iiimabbie.dcbot.util.PermissionUtil;
 
 /**
  * Status 指令 - 顯示機器人狀態
@@ -21,7 +21,6 @@ import per.iiimabbie.dcbot.util.PermissionUtil;
 public class StatusCommand implements SlashCommand {
 
   private final BotConfig botConfig;
-  private final PermissionUtil permissionUtil;
 
   // 記錄啟動時間
   private static final long START_TIME = System.currentTimeMillis();
@@ -39,19 +38,14 @@ public class StatusCommand implements SlashCommand {
   @Override
   public void execute(SlashCommandInteractionEvent event) {
 
-    // 權限檢查
-    permissionUtil.requireOwner(event);
-
     try {
-      MessageEmbed statusEmbed = createStatusEmbed(event);
+      MessageEmbed statusEmbed = createStatusEmbed(event.getJDA());
 
       // 添加重新整理按鈕
       Button refreshButton = Button.secondary("refresh_status", "🔄 重新整理");
-      Button pingButton = Button.primary("quick_ping", "🏓 測試延遲");
 
       event.replyEmbeds(statusEmbed)
-          .addActionRow(refreshButton, pingButton)
-          .setEphemeral(true)
+          .addActionRow(refreshButton)
           .queue();
 
     } catch (Exception e) {
@@ -63,7 +57,7 @@ public class StatusCommand implements SlashCommand {
   /**
    * 建立狀態資訊 Embed
    */
-  public MessageEmbed createStatusEmbed(SlashCommandInteractionEvent event) {
+  public MessageEmbed createStatusEmbed(JDA jda) {
     // 計算運行時間
     long uptime = System.currentTimeMillis() - START_TIME;
     String uptimeStr = formatUptime(uptime);
@@ -80,34 +74,32 @@ public class StatusCommand implements SlashCommand {
     String osName = System.getProperty("os.name");
 
     // Discord 連線資訊
-    long gatewayPing = event.getJDA().getGatewayPing();
-    int guildCount = event.getJDA().getGuilds().size();
+    long gatewayPing = jda.getGatewayPing();
+    int guildCount = jda.getGuilds().size();
 
     return new EmbedBuilder()
-        .setTitle("🤖 " + botConfig.getName() + " 狀態報告")
-        .setDescription("機器人目前運行正常 ✅")
+        .setTitle("🤖 " + botConfig.getName() + " 的生存報告")
+        .setDescription("機器人目前運行正常 ✧◝(⁰▿⁰)◜✧")
         .setColor(ColorEnums.GREEN.getColor())
-        .setThumbnail(event.getJDA().getSelfUser().getAvatarUrl())
+        .setThumbnail(jda.getSelfUser().getAvatarUrl())
 
         // 基本資訊
-        .addField("⏰ 運行時間", uptimeStr, true)
-        .addField("🏓 延遲", gatewayPing + " ms", true)
-        .addField("🏠 伺服器數量", String.valueOf(guildCount), true)
+        .addField("運行時間", uptimeStr, true)
+        .addField("延遲", gatewayPing + " ms", true)
+        .addField("伺服器數量", String.valueOf(guildCount), true)
 
         // 記憶體資訊
-        .addField("💾 記憶體使用",
+        .addField("記憶體使用",
             String.format("已使用: %d MB\n總共: %d MB\n最大: %d MB",
                 usedMemory, totalMemory, maxMemory), true)
 
-        // 系統資訊
-        .addField("⚙️ 系統資訊",
-            String.format("Java: %s\nOS: %s", javaVersion, osName), true)
+        // 系統資訊 敏感資訊先不要
+//        .addField("系統資訊",
+//            String.format("Java: %s", javaVersion), true)
 
         // 當前狀態
-        .addField("📊 當前狀態",
-            String.format("狀態: %s\n活動: %s",
-                event.getJDA().getStatus().name(),
-                botConfig.getStatus().getText()), true)
+        .addField("當前狀態",
+            String.format("%s", jda.getStatus().name()), true)
 
         .setFooter("最後更新", null)
         .setTimestamp(Instant.now())

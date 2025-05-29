@@ -8,7 +8,8 @@ public class BotEmojis {
   public enum Tool {
     LOADING("loading"),
     SUCCESS("success"),
-    ERROR("error");
+    ERROR("error"),
+    GITHUB("github");
 
     private final String name;
 

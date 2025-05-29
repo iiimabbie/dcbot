@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.springframework.stereotype.Component;
 import per.iiimabbie.dcbot.command.impl.CommandsCommand;
+import per.iiimabbie.dcbot.command.impl.StatusCommand;
 import per.iiimabbie.dcbot.exception.BotException;
 
 /**
@@ -17,6 +19,7 @@ import per.iiimabbie.dcbot.exception.BotException;
 public class ButtonInteractionListener extends ListenerAdapter {
 
   private final CommandsCommand commandsCommand;
+  private final StatusCommand statusCommand;
 
   @Override
   public void onButtonInteraction(ButtonInteractionEvent event) {
@@ -51,17 +54,23 @@ public class ButtonInteractionListener extends ListenerAdapter {
         }
       }
       case "refresh_status" -> {
-        // TODO 重新整理狀態 - 這裡是騙人的 還沒做
-        // 或者直接回應新的狀態資訊
-        event.reply("🔄 狀態已重新整理！使用 `/status` 查看最新狀態")
-            .setEphemeral(true)
-            .queue();
-      }
-      case "quick_ping" -> {
-        long gatewayPing = event.getJDA().getGatewayPing();
-        event.reply(String.format("🏓 當前延遲: %d ms", gatewayPing))
-            .setEphemeral(true)
-            .queue();
+        try {
+          // 通知用戶正在更新
+          event.deferEdit().queue();
+
+          // 重新整理並顯示最新狀態
+          Button refreshButton = Button.secondary("refresh_status", "🔄 重新整理");
+
+          // 使用 StatusCommand 的方法獲取最新狀態
+          event.getHook().editOriginalEmbeds(statusCommand.createStatusEmbed(event.getJDA()))
+              .setActionRow(refreshButton)
+              .queue();
+        } catch (Exception e) {
+          log.error("重新整理狀態時發生錯誤", e);
+          event.reply("❌ 無法重新整理狀態資訊")
+              .setEphemeral(true)
+              .queue();
+        }
       }
       default -> {
         log.warn("未處理的按鈕互動: {}", buttonId);

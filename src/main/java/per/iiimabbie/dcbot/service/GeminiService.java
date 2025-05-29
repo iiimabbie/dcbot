@@ -202,7 +202,7 @@ public class GeminiService {
     headers.setContentType(MediaType.APPLICATION_JSON);
 
     // 序列化請求
-    String requestJson = objectMapper.writeValueAsString(request);
+    String requestJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(request);
     log.debug("Gemini 請求 JSON: {}", requestJson);
 
     HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
@@ -228,7 +228,7 @@ public class GeminiService {
         return "抱歉，我沒有收到有效的回應...";
       }
 
-      log.debug("Gemini 回應: {}", responseText);
+      log.info("Gemini 回應: {}", responseText.replaceAll("\\R", "\\\\n"));
       return responseText;
 
     } catch (BotException e) {

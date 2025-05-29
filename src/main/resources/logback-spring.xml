@@ -30,7 +30,7 @@
   </appender>
 
   <!-- 特定包的日誌級別 -->
-  <logger name="per.iiimabbie.dcbot" level="INFO" additivity="false">
+  <logger name="per.iiimabbie.dcbot" level="DEBUG" additivity="false">
     <appender-ref ref="CONSOLE"/>
     <appender-ref ref="FILE"/>
     <appender-ref ref="DISCORD"/>
