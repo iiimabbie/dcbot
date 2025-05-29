@@ -3,7 +3,6 @@ package per.iiimabbie.dcbot.service;
 import java.time.Instant;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.springframework.stereotype.Service;
 import per.iiimabbie.dcbot.enums.ColorEnums;
 
@@ -53,31 +52,4 @@ public class MessageBuilderService {
     return createBasicEmbed("ℹ️ " + title, message, ColorEnums.BLUE);
   }
 
-  /**
-   * 建立幫助訊息
-   */
-  public MessageEmbed createHelpEmbed(String commandName, String description, String usage) {
-    return new EmbedBuilder()
-        .setTitle("📚 指令說明 - " + commandName)
-        .setDescription(description)
-        .addField("使用方法", usage, false)
-        .setColor(ColorEnums.PURPLE.getColor())
-        .setTimestamp(Instant.now())
-        .build();
-  }
-
-  /**
-   * 建立帶按鈕的訊息
-   */
-  public Button createPrimaryButton(String id, String label) {
-    return Button.primary(id, label);
-  }
-
-  public Button createSecondaryButton(String id, String label) {
-    return Button.secondary(id, label);
-  }
-
-  public Button createDangerButton(String id, String label) {
-    return Button.danger(id, label);
-  }
 }

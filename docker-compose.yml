@@ -1,0 +1,25 @@
+services:
+  dcbot:
+    container_name: dcbot
+    image: java21  # 直接用預先 build 好的映像檔
+    environment:
+      # - DISCORD_TOKEN=${DISCORD_TOKEN}
+      # - DISCORD_GUILD_ID=${DISCORD_GUILD_ID}
+      # - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # - BOT_OWNER_ID=${BOT_OWNER_ID}
+      - JAVA_OPTS=-Duser.timezone=Asia/Taipei
+      - TZ=Asia/Taipei  # 設定時區
+      - SPRING_PROFILES_ACTIVE=docker
+    volumes:
+      - ./:/app                                # 掛載整個專案目錄
+      - ./logs:/app/logs                       # 日誌目錄
+      - ~/.m2:/root/.m2                        # Maven 快取
+    working_dir: /app
+    command: sh -c "mvn clean package -DskipTests && java -Xmx512m -jar target/dcbot-0.0.1-SNAPSHOT.jar"
+    restart: unless-stopped
+    networks:
+      - dcbot-network
+
+networks:
+  dcbot-network:
+    driver: bridge

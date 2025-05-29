@@ -38,7 +38,7 @@ public class HelpCommand implements SlashCommand {
 
     // 創建按鈕
     Button commandsButton = Button.primary("show_commands", "📋 查看所有指令");
-    Button supportButton = Button.link("https://github.com/iiimabbie/dcbot", "🆘 我的家");
+    Button supportButton = Button.link("https://github.com/iiimabbie/dcbot", "🆘 GitHub");
 
     event.replyEmbeds(helpEmbed)
         .addActionRow(commandsButton, supportButton)

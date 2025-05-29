@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- 從 Spring Boot 配置中獲取 Discord webhook URL -->
+  <springProperty scope="context" name="discordWebhookUrl" source="discord.log.webhook-url"/>
+
+  <!-- Console 輸出 -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{36}) - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- 檔案輸出 -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>logs/dcbot.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>logs/dcbot.log.%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>1GB</totalSizeCap>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{36}) - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- Discord 輸出 -->
+  <appender name="DISCORD" class="per.iiimabbie.dcbot.logging.DiscordAppender">
+    <webhookUrl>${discordWebhookUrl}</webhookUrl>
+    <level>ERROR</level>
+  </appender>
+
+  <!-- 特定包的日誌級別 -->
+  <logger name="per.iiimabbie.dcbot" level="INFO" additivity="false">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="FILE"/>
+    <appender-ref ref="DISCORD"/>
+  </logger>
+
+  <logger name="net.dv8tion.jda" level="INFO"/>
+  <logger name="org.springframework" level="WARN"/>
+
+  <!-- Root logger -->
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="FILE"/>
+    <!-- 如果希望所有日誌都通過 Discord 輸出，取消下面的註釋 -->
+    <!-- <appender-ref ref="DISCORD"/> -->
+  </root>
+</configuration>
