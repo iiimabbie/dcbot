@@ -2,6 +2,7 @@ package per.iiimabbie.dcbot.service;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
@@ -17,6 +18,7 @@ import per.iiimabbie.dcbot.command.impl.StatusCommand;
 import per.iiimabbie.dcbot.config.BotConfig;
 import per.iiimabbie.dcbot.config.DiscordConfig;
 import per.iiimabbie.dcbot.listener.ButtonInteractionListener;
+import per.iiimabbie.dcbot.listener.DiceRollListener;
 import per.iiimabbie.dcbot.listener.MessageListener;
 import per.iiimabbie.dcbot.listener.SlashCommandListener;
 
@@ -30,12 +32,14 @@ public class DiscordService {
   private final MessageListener messageListener;
   private final SlashCommandListener slashCommandListener;
   private final ButtonInteractionListener buttonInteractionListener;
+  private final DiceRollListener diceRollListener;
   private final EmojiManager emojiManager;
   private final CommandManager commandManager;
   private final HelpCommand helpCommand;
   private final CommandsCommand commandsCommand;
   private final PingCommand pingCommand;
   private final StatusCommand statusCommand;
+  @Getter
   private JDA jda;
 
   @PostConstruct
@@ -51,7 +55,12 @@ public class DiscordService {
               GatewayIntent.MESSAGE_CONTENT,
               GatewayIntent.GUILD_MEMBERS
           )
-          .addEventListeners(messageListener, slashCommandListener, buttonInteractionListener)
+          .addEventListeners(
+              messageListener,
+              slashCommandListener,
+              buttonInteractionListener,
+              diceRollListener
+          )
           .build();
 
       jda.awaitReady();

@@ -13,6 +13,7 @@ public class BotConfig {
   private Status status;
   private String systemPrompt;
   private String ownerId;
+  private String scheduledChannelId;
 
   @Data
   public static class Status {
